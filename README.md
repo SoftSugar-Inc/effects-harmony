@@ -1,4 +1,4 @@
-# SenseAR Effects特效引擎iOS SDK集成Demo
+# SenseAR Effects特效引擎Harmony SDK集成Demo
 
 本项目是**商汤科技**提供的[**特效引擎 SDK**](https://sensear.softsugar.com/) Harmony 集成演示工程，旨在帮助开发者快速了解如何在Harmony项目中集成与使用我们的特效引擎SDK。您可以通过运行本 Demo，直观体验SDK提供的各类人脸特效、贴纸、美颜、滤镜等功能。
 
@@ -56,7 +56,7 @@
        "path": "./src/main/cpp/CMakeLists.txt",
        "arguments": "",
        "cppFlags": ""
-       }
+      }
    }
    ```
 
