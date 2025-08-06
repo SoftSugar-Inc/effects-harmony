@@ -61,6 +61,7 @@
    ```
 
 4. 添加so库依赖
+
    在0h-package.json5中添加以下字段
    
    ```json
@@ -69,7 +70,7 @@
    },
    ```
 
-5. 添加Xcomponent组件
+6. 添加Xcomponent组件
    
    sdk内部会将画面渲染到Xcomponent组件上，ArkTS只需构建布局，参考如下:
    
