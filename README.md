@@ -99,4 +99,4 @@
 ## 反馈
 
 - 如果您在使用过程中有遇到什么问题，欢迎提交 [**issue**](https://github.com/SoftSugar-Inc/effects-harmony/issues)。
-- 我们真诚地感谢您的贡献，欢迎通过 GitHub 的 fork 和 pull request 流程来提交代码。代码风格请参考[**Introduction to ArkTS**]([文档中心](https://developer.huawei.com/consumer/cn/doc/harmonyos-guides/introduction-to-arkts))
+- 我们真诚地感谢您的贡献，欢迎通过 GitHub 的 fork 和 pull request 流程来提交代码。代码风格请参考[**Introduction to ArkTS**](https://developer.huawei.com/consumer/cn/doc/harmonyos-guides/introduction-to-arkts)
