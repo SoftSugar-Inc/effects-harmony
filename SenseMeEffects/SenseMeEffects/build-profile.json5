@@ -1,0 +1,58 @@
+{
+  "app": {
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "storeFile": "D:/Workspace/HarmonyProject/effects-harmony/appsign/Effects-SoftSugar.p12",
+          "storePassword": "000000199430369C7E7F259DCAFBE4C579DA3A4CAA83671029D074D1E9F356931759998A9233B75625",
+          "keyAlias": "SoftSugar",
+          "keyPassword": "000000195B184AD51E9536C3D6606662F37AB721220B4CBE4CFF00C7919EC57E633782FF5578273C3B",
+          "signAlg": "SHA256withECDSA",
+          "profile": "D:/Workspace/HarmonyProject/effects-harmony/appsign/EffectsRelease.p7b",
+          "certpath": "D:/Workspace/HarmonyProject/effects-harmony/appsign/Effects.cer"
+        }
+      }
+    ],
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default",
+        "compatibleSdkVersion": "5.0.0(12)",
+        "runtimeOS": "HarmonyOS"
+      }
+    ],
+    "buildModeSet": [
+      {
+        "name": "release"
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "stplayer",
+      "srcPath": "./stplayer",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    }
+  ]
+}

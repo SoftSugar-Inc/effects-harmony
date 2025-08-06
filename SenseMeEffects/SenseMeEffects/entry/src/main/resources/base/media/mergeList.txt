@@ -1,0 +1,3 @@
+file '/data/storage/el2/base/haps/entry/cache/testvideo.mp4'
+file '/data/storage/el2/base/haps/entry/cache/testvideo.mp4'
+file '/data/storage/el2/base/haps/entry/cache/testvideo.mp4'

@@ -1,0 +1,69 @@
+[
+    {
+      "currentStrength": 0.25,
+      "subBeauties": [],
+      "cleanObject": {
+        "name": "瘦脸",
+        "type": 201,
+        "defaultStrength": 0.05,
+        "mode": 0,
+        "path": "",
+        "defaultIcon": "beauty_shrink_face_default",
+        "highlightIcon": "beauty_shrink_face_highlight"
+      }
+    },
+    {
+        "currentStrength": 0.5,
+        "subBeauties": [],
+        "cleanObject": {
+          "name": "大眼",
+          "type": 202,
+          "defaultStrength": 0.2,
+          "mode" : 0,
+          "path" : "",
+          "defaultIcon" : "beauty_enlarge_eye_default",
+          "highlightIcon" : "beauty_enlarge_eye_highlight"
+        }
+    },
+    {
+        "currentStrength": 0.0,
+        "subBeauties": [],
+        "cleanObject": {
+          "name": "小脸",
+          "type": 203,
+          "defaultStrength": 0.2,
+          "mode" : 0,
+          "path" : "",
+          "defaultIcon" : "beauty_shrink_jaw_default",
+          "highlightIcon" : "beauty_shrink_jaw_highlight"
+        }
+    },
+    {
+        "currentStrength": 0.05,
+        "subBeauties": [],
+        "cleanObject": {
+          "name": "窄脸",
+          "type": 204,
+          "defaultStrength": 0,
+          "mode" : 0,
+          "path" : "",
+          "defaultIcon" : "beauty_narrow_face_default",
+          "highlightIcon" : "beauty_narrow_face_highlight"
+        }
+    },
+    {
+        "currentStrength": 0.1,
+        "subBeauties": [],
+        "cleanObject": {
+          "name": "圆眼",
+          "type": 205,
+          "defaultStrength": 0.3,
+          "mode" : 0,
+          "path" : "",
+          "defaultIcon" : "beauty_round_eye_default",
+          "highlightIcon" : "beauty_round_eye_highlight"
+        }
+    }
+]
+
+

@@ -1,0 +1,12 @@
+export const setPlayerDataSource: (path: string, fd : number, size:number) => Promise<number>;
+export const getVideoInfo:() => VideoInfo;
+export const setFrameRate:(frameRate:number) => void;
+export const startPlay:(action:Function) => Promise<number>;
+export const pausePlay:() => void;
+export const resumePlay:() => void;
+export const setStateCallback:(callback:Function) => void;
+export const stopPlay:() => void;
+export const setRecorderDataSource:(filePath:string, fd : number, width:number, height:number , format :number,  rotate : number) => Promise<number>;
+export const startRecord:() => Promise<number>;
+export const pushVideoFrame:(buffer:ArrayBuffer, width:number, height:number) => number;
+export const stopRecord:() => number;

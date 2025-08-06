@@ -1,0 +1,14 @@
+{
+  "name": "com.softsugar.mars.sdk.effects",
+  "version": "$string:version",
+  "description": "Please describe the basic information.",
+  "main": "",
+  "author": "",
+  "license": "",
+  "dependencies": {
+    "libentry.so": "file:./src/main/cpp/types/libentry",
+    "@ohos/stplayer": "file:../stplayer"
+  },
+  "devDependencies": {},
+  "dynamicDependencies": {}
+}

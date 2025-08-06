@@ -1,0 +1,58 @@
+[
+  {
+    "listName": "TryOn口红",
+    "effectsListId": 29,
+    "type" : 3
+  },
+  {
+    "listName": "TryOn染发",
+    "effectsListId": 30,
+    "type" : 3
+  },
+  {
+    "listName": "TryOn唇线",
+    "effectsListId": 31,
+    "type" : 3
+  },
+  {
+    "listName": "TryOn眼影",
+    "effectsListId": 32,
+    "type" : 3
+  },
+  {
+    "listName": "TryOn眼线",
+    "effectsListId": 33,
+    "type" : 3
+  },
+  {
+    "listName": "TryOn眼印",
+    "effectsListId": 34,
+    "type" : 3
+  },
+  {
+    "listName": "TryOn眼睫毛",
+    "effectsListId": 35,
+    "type" : 3
+  },
+  {
+    "listName": "TryOn眉毛",
+    "effectsListId": 36
+  ,
+    "type" : 3
+  },
+  {
+    "listName": "TryOn腮红",
+    "effectsListId": 37,
+    "type" : 3
+  },
+  {
+    "listName": "TryOn修容",
+    "effectsListId": 38,
+    "type" : 3
+  },
+  {
+    "listName": "TryOn粉底",
+    "effectsListId": 39,
+    "type" : 3
+  }
+]

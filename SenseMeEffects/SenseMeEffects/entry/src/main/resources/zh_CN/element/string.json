@@ -1,0 +1,48 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "模块描述"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "description"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "Effects"
+    },
+    {
+      "name": "homepage_beauty_entrance",
+      "value": "美颜"
+    },
+    {
+      "name": "homepage_lvjing",
+      "value": "滤镜"
+    },
+    {
+      "name": "homepage_meizhuang",
+      "value": "美妆"
+    },
+    {
+      "name": "homepage_texiao",
+      "value": "特效"
+    },
+    {
+      "name": "DeliciousFoodFilters",
+      "value": "美食"
+    },
+    {
+      "name": "PortraitFilters",
+      "value": "人物"
+    },
+    {
+      "name": "SceneryFilters",
+      "value": "风景"
+    },
+    {
+      "name": "StillLifeFilters",
+      "value": "静物"
+    }
+  ]
+}

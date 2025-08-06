@@ -1,0 +1,48 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "module description"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "description"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "Effects"
+    },
+    {
+      "name": "homepage_beauty_entrance",
+      "value": "beauty"
+    },
+    {
+      "name": "homepage_lvjing",
+      "value": "filter"
+    },
+    {
+      "name": "homepage_meizhuang",
+      "value": "makeup"
+    },
+    {
+      "name": "homepage_texiao",
+      "value": "sticker"
+    },
+    {
+      "name": "DeliciousFoodFilters",
+      "value": "Foods"
+    },
+    {
+      "name": "PortraitFilters",
+      "value": "Selfie"
+    },
+    {
+      "name": "SceneryFilters",
+      "value": "Scenery"
+    },
+    {
+      "name": "StillLifeFilters",
+      "value": "Objects"
+    }
+  ]
+}

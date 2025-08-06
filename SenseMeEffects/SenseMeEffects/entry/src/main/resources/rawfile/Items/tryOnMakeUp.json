@@ -1,0 +1,37 @@
+[
+  {
+    "listName": "美甲",
+    "effectsListId": 114,
+    "type" : 4
+  },
+  {
+    "listName": "试鞋",
+    "effectsListId": 73,
+    "type" : 4
+  },
+  {
+    "listName": "试表",
+    "effectsListId": 74,
+    "type" : 4
+  },
+  {
+    "listName": "手链",
+    "effectsListId": 75,
+    "type" : 4
+  },
+  {
+    "listName": "耳环",
+    "effectsListId": 76,
+    "type" : 4
+  },
+  {
+    "listName": "眼镜",
+    "effectsListId": 77,
+    "type" : 4
+  },
+  {
+    "listName": "帽子",
+    "effectsListId": 78,
+    "type" : 4
+  }
+]

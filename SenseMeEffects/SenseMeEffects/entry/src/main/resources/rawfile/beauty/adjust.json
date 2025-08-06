@@ -1,0 +1,95 @@
+[
+    {
+      "currentStrength": 0.0,
+      "subBeauties": [],
+      "cleanObject": {
+        "name": "对比度",
+        "type": 601,
+        "defaultStrength": 0.0,
+        "mode": 0,
+        "path": "",
+        "defaultIcon": "beauty_contrast_default",
+        "highlightIcon": "beauty_contrast_highlight"
+      }
+    },
+    {
+        "currentStrength": 0.0,
+        "subBeauties": [],
+        "cleanObject": {
+          "name": "饱和度",
+          "type": 602,
+          "defaultStrength": 0.0,
+          "mode" : 0,
+          "path" : "",
+          "defaultIcon" : "beauty_saturation_default",
+          "highlightIcon" : "beauty_saturation_highlight"
+        }
+    },
+    {
+        "currentStrength": 0.5,
+        "subBeauties": [],
+        "cleanObject": {
+          "name": "锐化",
+          "type": 603,
+          "defaultStrength": 0.1,
+          "mode" : 0,
+          "path" : "",
+          "defaultIcon" : "beauty_sharpen_default",
+          "highlightIcon" : "beauty_sharpen_highlight"
+        }
+    },
+    {
+        "currentStrength": 0.2,
+        "subBeauties": [],
+        "cleanObject": {
+          "name": "清晰度",
+          "type": 604,
+          "defaultStrength": 0.1,
+          "mode" : 0,
+          "path" : "",
+          "defaultIcon" : "beauty_clear_default",
+          "highlightIcon" : "beauty_clear_highlight"
+        }
+    },
+    {
+        "currentStrength": 0.0,
+        "subBeauties": [],
+        "cleanObject": {
+          "name": "去噪",
+          "type": 606,
+          "defaultStrength": 0.0,
+          "mode" : 0,
+          "path" : "",
+          "defaultIcon" : "beauty_denoising_default",
+          "highlightIcon" : "beauty_denoising_highlight"
+        }
+    },
+    {
+        "currentStrength": 0.0,
+        "subBeauties": [],
+        "cleanObject": {
+          "name": "色调",
+          "type": 607,
+          "defaultStrength": 0.0,
+          "mode" : 0,
+          "path" : "",
+          "defaultIcon" : "beauty_color_tone_default",
+          "highlightIcon" : "beauty_color_tone_highlight"
+        }
+    },
+    {
+        "currentStrength": 0.0,
+        "subBeauties": [],
+        "cleanObject": {
+          "name": "色温",
+          "type": 608,
+          "defaultStrength": 0.0,
+          "mode" : 0,
+          "path" : "",
+          "defaultIcon" : "beauty_color_temperature_default",
+          "highlightIcon" : "beauty_color_temperature_highlight"
+        }
+    }
+]
+
+

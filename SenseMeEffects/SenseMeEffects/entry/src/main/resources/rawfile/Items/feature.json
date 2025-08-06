@@ -1,0 +1,17 @@
+[
+  {
+    "listName": "自然",
+    "effectsListId": 26,
+    "type" : 2
+  },
+  {
+    "listName": "轻妆",
+    "effectsListId": 27,
+    "type" : 2
+  },
+  {
+    "listName": "流行",
+    "effectsListId": 28,
+    "type" : 2
+  }
+]

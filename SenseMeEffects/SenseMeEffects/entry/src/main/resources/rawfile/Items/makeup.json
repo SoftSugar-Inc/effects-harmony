@@ -1,0 +1,47 @@
+[
+  {
+    "listName": "染发",
+    "effectsListId": 25,
+    "type" : 401
+  },
+  {
+    "listName": "口红",
+    "effectsListId": 24,
+    "type" : 402
+  },
+  {
+    "listName": "腮红",
+    "effectsListId": 21,
+    "type" : 403
+  },
+  {
+    "listName": "修容",
+    "effectsListId": 22,
+    "type" : 404
+  },
+  {
+    "listName": "眉毛",
+    "effectsListId": 19,
+    "type" : 405
+  },
+  {
+    "listName": "眼影",
+    "effectsListId": 17,
+    "type" : 406
+  },
+  {
+    "listName": "眼线",
+    "effectsListId": 23,
+    "type" : 407
+  },
+  {
+    "listName": "睫毛",
+    "effectsListId": 18,
+    "type" : 407
+  },
+  {
+    "listName": "美瞳",
+    "effectsListId": 20,
+    "type" : 409
+  }
+]

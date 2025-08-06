@@ -1,0 +1,8 @@
+{
+  "src": [
+    "pages/Index",
+    "pages/Photo",
+    "pages/Video",
+    "pages/CameraPreview"
+  ]
+}

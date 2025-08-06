@@ -1,0 +1,74 @@
+[
+  {
+    "effectsListId": 41,
+    "listName": "最新",
+    "type" : 1
+  },
+  {
+    "effectsListId": 4,
+    "listName": "2D",
+    "type" : 1
+  },
+  {
+    "effectsListId": 5,
+    "listName": "3D",
+    "type" : 1
+  },
+  {
+    "effectsListId": 6,
+    "listName": "手势",
+    "type" : 1
+  },
+  {
+    "effectsListId": 7,
+    "listName": "分割",
+    "type" : 1
+  },
+  {
+    "effectsListId": 8,
+    "listName": "变形",
+    "type" : 1
+  },
+  {
+    "effectsListId": 9,
+    "listName": "粒子",
+    "type" : 1
+  },
+  {
+    "effectsListId": 10,
+    "listName": "动物",
+    "type" : 1
+  },
+  {
+    "effectsListId": 11,
+    "listName": "影分身",
+    "type" : 1
+  },
+  {
+    "effectsListId": 12,
+    "listName": "大头",
+    "type" : 1
+  },
+  {
+    "effectsListId": 13,
+    "listName": "捏脸",
+    "type" : 1
+  },
+  {
+    "effectsListId": 14,
+    "listName": "特效玩法",
+    "type" : 1
+  },
+  {
+    "effectsListId": 15,
+    "listName": "Avatar",
+    "type" : 1
+  },
+  {
+    "effectsListId": 16,
+    "listName": "TryOn",
+    "type" : 1
+  }
+]
+
+

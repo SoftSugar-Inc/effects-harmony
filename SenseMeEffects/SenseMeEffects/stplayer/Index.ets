@@ -1,0 +1,6 @@
+export { STPlayer } from "./src/main/ets/stplayer"
+export { PlayerState } from "./src/main/ets/state/PlayerState"
+export { STRecorder } from "./src/main/ets/strecorder"
+export { ICallBack } from "./src/main/ets/callback/ICallBack"
+export { IResultCallBack } from "./src/main/ets/callback/IResultCallBack"
+export { IFrameCallBack } from "./src/main/ets/callback/IFrameCallBack"

@@ -1,0 +1,10 @@
+{
+  "app": {
+    "bundleName": "com.softsugar.mars.effects",
+    "vendor": "SoftSugar",
+    "versionCode": 1000000,
+    "versionName": "9.7.2",
+    "icon": "$media:app_icon",
+    "label": "$string:app_name"
+  }
+}
