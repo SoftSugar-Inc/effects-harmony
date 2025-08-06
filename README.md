@@ -1,4 +1,4 @@
-# SenseAR Effects特效引擎iOS SDK集成Demo
+# SenseAR Effects特效引擎Harmony SDK集成Demo
 
 本项目是**商汤科技**提供的[**特效引擎 SDK**](https://sensear.softsugar.com/) Harmony 集成演示工程，旨在帮助开发者快速了解如何在Harmony项目中集成与使用我们的特效引擎SDK。您可以通过运行本 Demo，直观体验SDK提供的各类人脸特效、贴纸、美颜、滤镜等功能。
 
@@ -11,7 +11,7 @@
 - AR 贴纸/道具实时叠加
 - 实时滤镜效果
 - 视频流处理与渲染
-- 高性能渲染支持（基于 OpenGL ES/Metal）
+- 高性能渲染支持（基于 OpenGL ES）
 
 ---
 
@@ -41,7 +41,7 @@
 如果您需要在自己的项目中引入SDK，请参考如下步骤：
 
 1. 导入SDK
-   参照Harmony工程构建natvie模板，在entry/src放入sdk的cpp文件夹
+   参照Harmony工程构建native模板，在entry/src放入sdk的cpp文件夹
 
 2. 导入检测模型与素材文件
    一般放至rawfile目录下，程序初始化时先通过鸿蒙 resourceManager读取，再拷贝至app沙盒目录下，sdk通过沙盒路径加载检测模型
@@ -92,11 +92,11 @@
    
    注意事项：XComponent的libraryname需要与前边构建的sdk so库一致，默认值为entry(libentry.so)
 
-> [详细接入文档](./SenseMeEffects/st_mobile_sdk/docs/SenseAR集成文档.pdf)
+> [详细接入文档](./SenseMeEffects/st_mobile_sdk/docs/SenseAR集成文档.md)
 
 ---
 
 ## 反馈
 
-- 如果您在使用过程中有遇到什么问题，欢迎提交 [**issue**](https://github.com/SoftSugar-Inc/effects-ios/issues)。
-- 我们真诚地感谢您的贡献，欢迎通过 GitHub 的 fork 和 pull request 流程来提交代码。代码风格请参考[**Coding Guidelines for Cocoa**](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/CodingGuidelines/CodingGuidelines.html)
+- 如果您在使用过程中有遇到什么问题，欢迎提交 [**issue**](https://github.com/SoftSugar-Inc/effects-harmony/issues)。
+- 我们真诚地感谢您的贡献，欢迎通过 GitHub 的 fork 和 pull request 流程来提交代码。代码风格请参考[**Introduction to ArkTS**]([文档中心](https://developer.huawei.com/consumer/cn/doc/harmonyos-guides/introduction-to-arkts))
