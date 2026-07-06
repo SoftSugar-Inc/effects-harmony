@@ -19,6 +19,22 @@ const char* RECORDTAG = "RECORCD_TAG";
 
 int64_t g_timeStamp = 0;
 
+// 实现状态通知方法
+void MediaRecorder::notifyRecordState(R_STATE state) {
+    m_recordState.store(state);
+    if (m_recordStateCallback != nullptr) {
+        m_recordStateCallback(static_cast<int>(state));
+    }
+}
+
+void MediaRecorder::setRecordStateCallback(RecordStateCallback callback) {
+    m_recordStateCallback = callback;
+}
+
+R_STATE MediaRecorder::getRecordState() {
+    return m_recordState.load();
+}
+
 R_RESULT MediaRecorder::setRecordPath(){
     if (recordBean == nullptr) {
         LOGE(RECORDTAG, "please set record bean first");
@@ -73,29 +89,37 @@ R_RESULT MediaRecorder::setRecordPath(){
 R_RESULT MediaRecorder::startRecord(){
     if (recordBean == nullptr) {
         LOGE(RECORDTAG, "please set record bean first");
+        notifyRecordState(RECORDER_ERROR);
         return RECORDER_FILE_ERROR;
     }
+    notifyRecordState(RECORDER_START);
     if (createVideoEncoder() != RECORDER_OK) {
         LOGE(RECORDTAG, "create video encoder error");
+        notifyRecordState(RECORDER_ERROR);
         return RECORDER_FILE_ERROR;
     }
     if (configVideoEncoder() != RECORDER_OK) {
         LOGE(RECORDTAG, "config video encoder error");
         release();
+        notifyRecordState(RECORDER_ERROR);
         return RECORDER_ENCODE_ERROR;
     }
     if(startEncode() != RECORDER_OK){
         LOGE(RECORDTAG, "start muxe error");
         release();
+        notifyRecordState(RECORDER_ERROR);
         return RECORDER_ENCODE_ERROR;
     }
+    notifyRecordState(RECORDER_PLAYINT);
     return RECORDER_OK;
 }
 
 void MediaRecorder::stopRecord(){
+    notifyRecordState(RECORDER_STOP);
     stopEncode();
     stopOutLoop();
     release();
+    notifyRecordState(RECORDER_COMPLETE);
 }
 
 R_RESULT MediaRecorder::createVideoEncoder(){
@@ -165,8 +189,10 @@ R_RESULT MediaRecorder::setRecordCallback(){
         RSignal *signal = static_cast<RSignal*>(userData);
         unique_lock<mutex> lock(signal->m_inputMutex);
         signal->m_inputCond.wait(lock, [&signal]{return signal->m_inputBufferQueue.size() > 0 || signal->m_stopInput;});
-        int pts = g_timeStamp;// * 40 / 25 ;
-        g_timeStamp += 1000 * 1000 * 1.0 / 30.0f;
+        
+        // 直接使用g_timeStamp，它已经被pushFrameData正确设置了
+        int pts = g_timeStamp;
+        
         OH_AVCodecBufferAttr attr = { 
           .pts = pts,
           .size = 0,
@@ -214,12 +240,20 @@ R_RESULT MediaRecorder::setRecordCallback(){
     return OH_VideoEncoder_SetCallback(m_videoEncoder, m_cb, static_cast<void *>(m_signal.get())) != AV_ERR_OK ? RECORDER_ENCODE_ERROR:RECORDER_OK;
 }
 
-R_RESULT MediaRecorder::pushFrameData(uint8_t *data, int width, int height){
+R_RESULT MediaRecorder::pushFrameData(uint8_t *data, int width, int height, int64_t timestamp){
     if (data == nullptr || m_width != width || m_height != height) {
         LOGE(RECORDTAG, "push frame data parameters error %{public}d %{public}d %{public}d %{public}d", m_width, m_height, width, height);
+        notifyRecordState(RECORDER_ERROR);
         return RECORDER_PARAM_ERROR;
     }
-    if (!m_outputIsRuning) return RECORDER_PARAM_ERROR;
+    if (!m_outputIsRuning) {
+        notifyRecordState(RECORDER_ERROR);
+        return RECORDER_PARAM_ERROR;
+    }
+    
+    // 通知正在编码状态
+    notifyRecordState(RECORDER_ENCODING);
+    
     unique_lock<mutex> lock(m_signal->m_inputMutex);
     uint32_t dataSize = m_signal->m_inputBufferSize;
 
@@ -238,17 +272,40 @@ R_RESULT MediaRecorder::pushFrameData(uint8_t *data, int width, int height){
 
     m_signal->m_inputBufferQueue.push(memory);
     m_signal->m_inputCond.notify_one();
+    
+    // 处理时间戳逻辑
+    if (timestamp >= 0) {
+        // 使用提供的自定义时间戳
+        g_timeStamp = timestamp;
+        m_lastCustomTimestamp = timestamp;
+        LOGD(RECORDTAG, "使用自定义时间戳: %{public}lld", static_cast<long long>(timestamp));
+    } else {
+        // 没有提供时间戳时的处理策略
+        if (m_lastCustomTimestamp >= 0) {
+            // 如果之前使用过自定义时间戳，继续基于最后一个自定义时间戳递增
+            g_timeStamp = m_lastCustomTimestamp + static_cast<int64_t>(1000 * 1000 * 1.0 / 30.0f);
+            m_lastCustomTimestamp = g_timeStamp;  // 更新记录
+            LOGD(RECORDTAG, "基于最后自定义时间戳递增: %{public}lld", static_cast<long long>(g_timeStamp));
+        } else {
+            // 完全使用默认递增方式
+            g_timeStamp += static_cast<int64_t>(1000 * 1000 * 1.0 / 30.0f);
+            LOGD(RECORDTAG, "使用默认时间戳递增: %{public}lld", static_cast<long long>(g_timeStamp));
+        }
+    }
+    
     return RECORDER_OK;
 }
 
 R_RESULT MediaRecorder::startEncode(){
     m_outputIsRuning.store(true);
     g_timeStamp = 0;
+    m_lastCustomTimestamp = -1;  // 重置自定义时间戳记录
     int ret = OH_VideoEncoder_Start(m_videoEncoder);
     if (ret != AV_ERR_OK) {
         LOGE(RECORDTAG, "videoDec start error");
         m_outputIsRuning.store(false);
         release();
+        notifyRecordState(RECORDER_ERROR);
         return RECORDER_ENCODE_ERROR;
     }
     m_takethread = make_unique<thread>(&MediaRecorder::takeFunc, this);
@@ -257,6 +314,7 @@ R_RESULT MediaRecorder::startEncode(){
         m_outputIsRuning.store(false);
         OH_VideoEncoder_Stop(m_videoEncoder);
         release();
+        notifyRecordState(RECORDER_ERROR);
         return RECORDER_ENCODE_ERROR;
     }
     return RECORDER_OK;
@@ -270,11 +328,16 @@ void MediaRecorder::takeFunc(){
             break;
         }
         unique_lock<mutex> lock(m_signal->m_outputMutex);
-        m_signal->m_outputCond.wait(lock, [this]() {
-            return m_signal->m_outputIndexQueue.size() > 0;
+        // 修改:使用带超时的wait,防止永久阻塞
+        m_signal->m_outputCond.wait_for(lock, chrono::milliseconds(100), [this]() {
+            return m_signal->m_outputIndexQueue.size() > 0 || !m_outputIsRuning.load();
         });
         if(!m_outputIsRuning.load()) {
             break;
+        }
+        // 检查队列是否为空(超时后可能为空)
+        if(m_signal->m_outputIndexQueue.empty()) {
+            continue;
         }
         uint32_t index = m_signal->m_outputIndexQueue.front();
         OH_AVCodecBufferAttr attr = m_signal->m_outputArrQueue.front();
@@ -282,6 +345,8 @@ void MediaRecorder::takeFunc(){
             m_outputIsRuning.store(false);
             m_signal->m_outputCond.notify_all();
             LOGE(RECORDTAG, "video record finish");
+            // 编码完成通知
+            notifyRecordState(RECORDER_COMPLETE);
             break;
         }
         OH_AVMemory *memory = m_signal->m_outputBufferQueue.front();
@@ -297,6 +362,7 @@ void MediaRecorder::takeFunc(){
             m_outputIsRuning.store(false);
             m_signal->m_outputCond.notify_all();
             release();
+            notifyRecordState(RECORDER_ERROR);
             break;
         }
         m_signal->m_outputIndexQueue.pop();
@@ -322,6 +388,8 @@ void MediaRecorder::stopOutLoop(){
         Tools::ClearMemoryBufferQueue(m_signal->m_outputBufferQueue);
         lock.unlock();
         m_takethread->join();
+        // 关键修复:join后重置线程指针,防止析构时再次操作已join的线程
+        m_takethread.reset();
     }
 }
 

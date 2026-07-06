@@ -1,0 +1,184 @@
+[
+  {
+    "uid": "cream_skin",
+    "des": "奶油肌",
+    "display_des_res_id": "skin_detail_cream",
+    "select_icon_nor_res": "skintype_creamy_unselected",
+    "select_icon_press_res": "skintype_creamy_selected",
+    "beauty_asset_path": null,
+    "has_sub_params": true,
+    "hide_bottom_strength": true,
+    "click_event_type": ["set_strength_to_max", "toast_unsupported"],
+    "on_click_disable_effect_uid_arr": ["gan_skin"],
+    "only_show_in_image_mode": true,
+    "sub_params": [
+      {
+        "uid": "cream_concealer",
+        "des": "遮瑕",
+        "display_des_res_id": "skin_detail_concealer",
+        "beauty_type": 152,
+        "beauty_mode_param": 151,
+        "beauty_mode_value": 1,
+        "def_strength": 0
+      },
+      {
+        "uid": "cream_highlight",
+        "des": "高光",
+        "display_des_res_id": "skin_detail_highlight",
+        "beauty_type": 153,
+        "def_strength": 0,
+        "beauty_mode_param": 151,
+        "beauty_mode_value": 1
+      },
+      {
+        "uid": "cream_tone",
+        "des": "美白",
+        "display_des_res_id": "skin_detail_tone",
+        "beauty_type": 154,
+        "def_strength": 0,
+        "beauty_mode_param": 151,
+        "beauty_mode_value": 1
+      }
+    ]
+  },
+  {
+    "uid": "glossy_skin",
+    "des": "水光肌",
+    "display_des_res_id": "skin_detail_glossy",
+    "select_icon_nor_res": "skintype_water_unselected",
+    "select_icon_press_res": "skintype_water_selected",
+    "def_strength": 0,
+    "beauty_asset_path": null,
+    "has_sub_params": true,
+    "hide_bottom_strength": true,
+    "click_event_type": ["set_strength_to_max", "toast_unsupported"],
+    "on_click_disable_effect_uid_arr": ["gan_skin"],
+    "only_show_in_image_mode": true,
+    "sub_params": [
+      {
+        "uid": "glossy_concealer",
+        "des": "遮瑕",
+        "display_des_res_id": "skin_detail_concealer",
+        "beauty_type": 152,
+        "def_strength": 0,
+        "beauty_mode_param": 151,
+        "beauty_mode_value": 2
+      },
+      {
+        "uid": "glossy_highlight",
+        "des": "高光",
+        "display_des_res_id": "skin_detail_highlight",
+        "beauty_type": 153,
+        "def_strength": 0,
+        "beauty_mode_param": 151,
+        "beauty_mode_value": 2
+      },
+      {
+        "uid": "glossy_tone",
+        "des": "美白",
+        "display_des_res_id": "skin_detail_tone",
+        "beauty_type": 154,
+        "def_strength": 0,
+        "beauty_mode_param": 151,
+        "beauty_mode_value": 2
+      }
+    ]
+  },
+  {
+    "uid": "hd_skin",
+    "des": "高清肤质",
+    "display_des_res_id": "skin_detail_hd",
+    "select_icon_nor_res": "skintype_hd_unselected",
+    "select_icon_press_res": "skintype_hd_selected",
+    "def_strength": 0,
+    "beauty_asset_path": null,
+    "has_sub_params": true,
+    "hide_bottom_strength": true,
+    "click_event_type": ["set_strength_to_max", "toast_unsupported"],
+    "on_click_disable_effect_uid_arr": ["gan_skin"],
+    "only_show_in_image_mode": true,
+    "sub_params": [
+      {
+        "uid": "hd_concealer",
+        "des": "遮瑕",
+        "display_des_res_id": "skin_detail_concealer",
+        "beauty_type": 152,
+        "def_strength": 0,
+        "beauty_mode_param": 151,
+        "beauty_mode_value": 3
+      },
+      {
+        "uid": "hd_contoure",
+        "des": "立体",
+        "display_des_res_id": "skin_detail_contoure",
+        "beauty_type": 155,
+        "def_strength": 0,
+        "beauty_mode_param": 151,
+        "beauty_mode_value": 3
+      },
+      {
+        "uid": "hd_texture",
+        "des": "肌理",
+        "display_des_res_id": "skin_detail_texture",
+        "beauty_type": 156,
+        "def_strength": 0,
+        "beauty_mode_param": 151,
+        "beauty_mode_value": 3
+      }
+    ]
+  },
+  {
+    "uid": "misty_skin",
+    "des": "雾面肌",
+    "display_des_res_id": "skin_detail_misty",
+    "select_icon_nor_res": "skintype_wumian_unselected",
+    "select_icon_press_res": "skintype_wumian_selected",
+    "def_strength": 0,
+    "beauty_asset_path": null,
+    "has_sub_params": true,
+    "hide_bottom_strength": true,
+    "click_event_type": ["set_strength_to_max", "toast_unsupported"],
+    "on_click_disable_effect_uid_arr": ["gan_skin"],
+    "only_show_in_image_mode": true,
+    "sub_params": [
+      {
+        "uid": "misty_concealer",
+        "des": "遮瑕",
+        "display_des_res_id": "skin_detail_concealer",
+        "beauty_type": 152,
+        "def_strength": 0,
+        "beauty_mode_param": 151,
+        "beauty_mode_value": 4
+      },
+      {
+        "uid": "misty_matte",
+        "des": "哑光",
+        "display_des_res_id": "skin_detail_matte",
+        "beauty_type": 157,
+        "def_strength": 0,
+        "beauty_mode_param": 151,
+        "beauty_mode_value": 4
+      },
+      {
+        "uid": "misty_tone",
+        "des": "肤色",
+        "display_des_res_id": "skin_detail_tone",
+        "beauty_type": 158,
+        "def_strength": 0,
+        "beauty_mode_param": 151,
+        "beauty_mode_value": 4
+      }
+    ]
+  },
+  {
+    "uid": "gan_skin",
+    "des": "gan 肤质",
+    "display_des_res_id": "basic_smooth_gan",
+    "beauty_type": 140,
+    "select_icon_nor_res": "gan_skin_u",
+    "select_icon_press_res": "gan_skin_s",
+    "def_strength": 0,
+    "click_event_type": ["set_strength_to_max", "toast_unsupported"],
+    "on_click_disable_effect_uid_arr": ["cream_skin", "glossy_skin", "hd_skin", "misty_skin"]
+  }
+]

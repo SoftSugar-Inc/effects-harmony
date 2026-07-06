@@ -13,36 +13,71 @@
       "value": "Effects"
     },
     {
-      "name": "homepage_beauty_entrance",
-      "value": "beauty"
-    },
-    {
-      "name": "homepage_lvjing",
-      "value": "filter"
-    },
-    {
-      "name": "homepage_meizhuang",
-      "value": "makeup"
-    },
-    {
-      "name": "homepage_texiao",
-      "value": "sticker"
-    },
-    {
-      "name": "DeliciousFoodFilters",
+      "name": "7_DeliciousFoodFilters",
       "value": "Foods"
     },
     {
-      "name": "PortraitFilters",
+      "name": "4_PortraitFilters",
       "value": "Selfie"
     },
     {
-      "name": "SceneryFilters",
+      "name": "5_SceneryFilters",
       "value": "Scenery"
     },
     {
-      "name": "StillLifeFilters",
+      "name": "2_filter_film",
+      "value": "Film"
+    },
+    {
+      "name": "1_filter_texture",
+      "value": "Texture"
+    },
+    {
+      "name": "3_filter_vintage",
+      "value": "Vintage"
+    },
+    {
+      "name": "6_StillLifeFilters",
       "value": "Objects"
+    }
+    ,
+    {
+      "name": "ic_main_effect",
+      "value": "beauty"
+    },
+    {
+      "name": "ic_main_filter",
+      "value": "filter"
+    },
+    {
+      "name": "ic_main_makeup",
+      "value": "makeup"
+    },
+    {
+      "name": "ic_main_sticker",
+      "value": "sticker"
+    },
+    {
+      "name": "ic_main_style",
+      "value": "style"
+    },
+    {
+      "name": "ic_main_avatar",
+      "value": "avatar"
+    }
+    ,
+    {
+      "name": "ic_main_tryon",
+      "value": "Try On"
+    },
+    {
+      "name": "ic_main_is_me",
+      "value": "It's me"
+    }
+    ,
+    {
+      "name": "ic_main_all",
+      "value": "all"
     }
   ]
 }

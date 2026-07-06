@@ -1,0 +1,163 @@
+[
+  {
+    "des": "瘦身",
+    "uid": "effect_beauty_thin_body",
+    "display_des_res_id": "str_item_body_beauty_thin_body",
+    "beauty_type": 901,
+    "select_icon_nor_res": "ic_body_beauty_weightloss_unselected",
+    "select_icon_press_res": "ic_body_beauty_weightloss_selected",
+    "def_strength": 0,
+    "range_negative_to_positive": true,
+    "is_unsupport_multiBody": true
+  },
+  {
+    "des": "瘦头",
+    "uid": "effect_beauty_thin_head",
+    "display_des_res_id": "str_item_body_beauty_thin_head",
+    "beauty_type": 902,
+    "select_icon_nor_res": "ic_body_beauty_thinhead_unselected",
+    "select_icon_press_res": "ic_body_beauty_thinhead_selected",
+    "def_strength": 0,
+    "range_negative_to_positive": true
+  },
+  {
+    "des": "瘦肩",
+    "uid": "effect_beauty_thin_shoulders",
+    "display_des_res_id": "str_item_body_beauty_thin_shoulders",
+    "beauty_type": 903,
+    "select_icon_nor_res": "ic_body_beauty_thinshoulders_unselected",
+    "select_icon_press_res": "ic_body_beauty_thinshoulders_selected",
+    "def_strength": 0,
+    "range_negative_to_positive": true
+  },
+  {
+    "des": "瘦腰",
+    "uid": "effect_beauty_thin_waist",
+    "display_des_res_id": "str_item_body_beauty_thin_waist",
+    "beauty_type": 904,
+    "select_icon_nor_res": "ic_body_beauty_thinwaist_unselected",
+    "select_icon_press_res": "ic_body_beauty_thinwaist_selected",
+    "def_strength": 0,
+    "range_negative_to_positive": true
+  },
+  {
+    "des": "美臀",
+    "uid": "effect_beauty_buttocks",
+    "display_des_res_id": "str_item_body_beauty_beauty_buttocks",
+    "beauty_type": 905,
+    "select_icon_nor_res": "ic_body_beauty_hip_unselected",
+    "select_icon_press_res": "ic_body_beauty_hip_selected",
+    "def_strength": 0
+  },
+  {
+    "des": "瘦腿",
+    "uid": "effect_beauty_thin_leg",
+    "display_des_res_id": "str_item_body_beauty_thin_leg",
+    "beauty_type": 906,
+    "select_icon_nor_res": "ic_body_beauty_thinlegs_unselected",
+    "select_icon_press_res": "ic_body_beauty_thinlegs_selected",
+    "def_strength": 0,
+    "range_negative_to_positive": true
+  },
+  {
+    "des": "长腿",
+    "uid": "effect_beauty_long_leg",
+    "display_des_res_id": "str_item_body_beauty_long_leg",
+    "beauty_type": 907,
+    "select_icon_nor_res": "ic_body_beauty_longlegs_unselected",
+    "select_icon_press_res": "ic_body_beauty_longlegs_selected",
+    "def_strength": 0
+  },
+  {
+    "des": "天鹅颈",
+    "uid": "effect_beauty_swanneck",
+    "display_des_res_id": "str_item_body_beauty_swanneck",
+    "beauty_type": 908,
+    "select_icon_nor_res": "ic_body_beauty_swanneck_unselected",
+    "select_icon_press_res": "ic_body_beauty_swanneck_selected",
+    "def_strength": 0
+  },
+  {
+    "des": "胸部",
+    "uid": "effect_beauty_enlarge_breast",
+    "display_des_res_id": "str_item_body_beauty_enlarge_breast",
+    "beauty_type": 909,
+    "select_icon_nor_res": "ic_body_beauty_breastaugmentation_unselected",
+    "select_icon_press_res": "ic_body_beauty_breastaugmentation_selected",
+    "def_strength": 0
+  },
+  {
+    "des": "直角肩",
+    "uid": "effect_beauty_rightshoulder",
+    "display_des_res_id": "str_item_body_beauty_rightshoulder",
+    "beauty_type": 910,
+    "select_icon_nor_res": "ic_body_beauty_rightshoulder_unselected",
+    "select_icon_press_res": "ic_body_beauty_rightshoulder_selected",
+    "def_strength": 0
+  },
+  {
+    "des": "瘦手臂",
+    "uid": "effect_beauty_thinarms",
+    "display_des_res_id": "str_item_body_beauty_thinarms",
+    "beauty_type": 911,
+    "select_icon_nor_res": "ic_body_beauty_thinarms_unselected",
+    "select_icon_press_res": "ic_body_beauty_thinarms_selected",
+    "def_strength": 0,
+    "range_negative_to_positive": true
+  },
+  {
+    "des": "脖子粗细",
+    "uid": "effect_beauty_neckthickness",
+    "display_des_res_id": "str_item_body_beauty_neckthickness",
+    "beauty_type": 913,
+    "select_icon_nor_res": "ic_body_beauty_neckthickness_unselected",
+    "select_icon_press_res": "ic_body_beauty_neckthickness_selected",
+    "def_strength": 0,
+    "range_negative_to_positive": true
+  },
+  {
+    "des": "脖子长短",
+    "uid": "effect_beauty_necklength",
+    "display_des_res_id": "str_item_body_beauty_necklength",
+    "beauty_type": 912,
+    "select_icon_nor_res": "ic_body_beauty_necklength_unselected",
+    "select_icon_press_res": "ic_body_beauty_necklength_selected",
+    "def_strength": 0,
+    "range_negative_to_positive": true
+  },
+  {
+    "des": "瘦肚子",
+    "uid": "effect_beauty_thin_paunch",
+    "display_des_res_id": "str_item_body_beauty_thin_paunch",
+    "beauty_type": 916,
+    "select_icon_nor_res": "ic_body_beauty_abdomen_unselected",
+    "select_icon_press_res": "ic_body_beauty_abdomen_selected",
+    "def_strength": 0,
+    "only_show_in_image_mode": true,
+    "click_event_type": ["pull_aux_body_mesh"]
+  },
+  {
+    "des": "丰臀",
+    "uid": "effect_beauty_thin_paunch",
+    "display_des_res_id": "str_item_body_beauty_boost_butt",
+    "beauty_type": 914,
+    "select_icon_nor_res": "ic_body_beauty_buttocks_unselected",
+    "select_icon_press_res": "ic_body_beauty_buttocks_selected",
+    "def_strength": 0,
+    "only_show_in_image_mode": true,
+    "range_negative_to_positive": true,
+    "click_event_type": ["pull_aux_body_mesh"]
+  },
+  {
+    "des": "直背",
+    "uid": "effect_beauty_straightback",
+    "display_des_res_id": "str_item_body_beauty_straightback",
+    "beauty_type": 915,
+    "select_icon_nor_res": "ic_body_beauty_straightback_unselected",
+    "select_icon_press_res": "ic_body_beauty_straightback_selected",
+    "def_strength": 0,
+    "range_negative_to_positive": true,
+    "click_event_type": ["pull_aux_body_mesh"],
+    "only_show_in_image_mode": true
+  }
+]

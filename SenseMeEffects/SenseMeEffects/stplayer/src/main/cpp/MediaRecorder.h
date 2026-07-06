@@ -21,6 +21,7 @@
 #include "RecordBean.h"
 #include <memory>
 #include <multimedia/player_framework/native_avmemory.h>
+#include "common/common.h"
 
 using namespace std;
 
@@ -46,7 +47,10 @@ class MediaRecorder {
         R_RESULT startRecord();
         void stopRecord();
         unique_ptr<RecordBean> recordBean = nullptr;
-        R_RESULT pushFrameData(uint8_t* data, int width, int height);
+        R_RESULT pushFrameData(uint8_t* data, int width, int height, int64_t timestamp = -1);
+        // 添加状态回调设置方法
+        void setRecordStateCallback(RecordStateCallback callback);
+        R_STATE getRecordState();
     private:
         OH_AVMuxer* m_muxer{};
         OH_AVCodec* m_videoEncoder{};
@@ -66,6 +70,12 @@ class MediaRecorder {
         uint32_t m_width{};
         uint32_t m_height{};
         atomic<bool> m_outputIsRuning{false};
+        // 添加状态回调和状态管理
+        RecordStateCallback m_recordStateCallback = nullptr;
+        atomic<R_STATE> m_recordState{RECORDER_NODE};
+        void notifyRecordState(R_STATE state);
+        // 时间戳管理
+        int64_t m_lastCustomTimestamp{-1};  // 记录最后使用的自定义时间戳
 };
 
 }

@@ -18,7 +18,7 @@
         "description": "$string:EntryAbility_desc",
         "icon": "$media:icon",
         "label": "$string:EntryAbility_label",
-        "startWindowIcon": "$media:startIcon",
+        "startWindowIcon": "$media:icon",
         "startWindowBackground": "$color:start_window_background",
         "exported": true,
         "skills": [
@@ -35,12 +35,16 @@
     ],
     "requestPermissions": [
       {
+        "name": "ohos.permission.GET_NETWORK_INFO",
+        "reason": "$string:network"
+      },
+      {
         "name": "ohos.permission.CAMERA",
         "usedScene": {
           "abilities": [
             "EntryAbility"
           ],
-          "when": "inuse"
+          "when": "always"
         },
         "reason": "$string:CAMERA"
       },
@@ -50,7 +54,7 @@
           "abilities": [
             "EntryAbility"
           ],
-          "when": "inuse"
+          "when": "always"
         },
         "reason": "$string:READ_MEDIA"
       },
@@ -60,9 +64,9 @@
           "abilities": [
             "EntryAbility"
           ],
-          "when": "inuse"
+          "when": "always"
         },
-        "reason": "$string:CAMERA"
+        "reason": "$string:WRITE_MEDIA"
       },
       {
         "name": "ohos.permission.STORE_PERSISTENT_DATA",

@@ -20,10 +20,11 @@ export default class FilterResource {
       // console.log(`@mahaomeng ${filterCategory} length: ${files.length}`)
       for (let filterIndex = 0; filterIndex < files.length; filterIndex++) {
         const file = files[filterIndex];
-        if (file.endsWith('.model')) {
-          const baseName = file.slice(0, -('.model'.length))
+        if (file.endsWith('.model') || file.endsWith('.zip')) {
+          let baseName = file.replace('.zip', '')
+          baseName = baseName.replace('.model', '')
           const prefix = "filter_style_"
-          const name = baseName.replace(prefix, '')
+          let name =  baseName.replace(prefix, '')
           let filterPath = `${directoryName}/${file}`
           let filter = new FilterObject(filterPath, name)
           const thumbnailFile = files.find(f => f.startsWith(baseName) && (f.endsWith('.jpg') || f.endsWith('.png')))

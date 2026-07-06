@@ -1,0 +1,120 @@
+[
+  {
+    "name": "美颜",
+    "type": 0,
+    "routerIndex" : 0,
+    "icon": "ic_main_effect",
+    "color": "#DEE6F1",
+    "items": [
+      {"icon": "ic_all_basic","name": "美颜", "index": 0},
+      {"icon": "ic_all_mx","name": "美形", "index": 1},
+      {"icon": "ic_all_wzh","name": "微整形", "index": 2},
+      {"icon": "ic_all_3d_wzh","name": "3D微整形", "index": 4},
+      {"icon": "ic_all_tzh","name": "调整", "index": 5},
+      {"icon": "ic_beijingxuhua","name": "背景虚化", "index": 6},
+      {"icon": "ic_beauty_body","name": "美体", "index": 3}
+    ]
+  },
+  {
+    "name": "滤镜",
+    "type": 1,
+    "routerIndex" : 0,
+    "icon": "ic_main_filter",
+    "color": "#EBF2E2",
+    "items": [
+      {"icon": "ic_filter_texture","name": "质感", "index": 0},
+      {"icon": "ic_filter_film","name": "胶片", "index": 1},
+      {"icon": "ic_filter_vintage","name": "复古", "index": 2},
+      {"icon": "ic_all_rw","name": "人物", "index": 3},
+      {"icon": "ic_all_fj","name": "风景", "index": 4},
+      {"icon": "ic_all_jw","name": "静物", "index": 5},
+      {"icon": "ic_all_food","name": "美食", "index": 6}
+    ]
+  },
+  {
+    "name": "美妆",
+    "type": 2,
+    "routerIndex" : 0,
+    "icon": "ic_main_makeup",
+    "color": "#FDE9E6",
+    "items": [
+      {"icon": "ic_all_rf","name": "染发", "index": 0},
+      {"icon": "ic_all_lip","name": "口红", "index": 3},
+      {"icon": "ic_all_blush","name": "腮红", "index": 4},
+      {"icon": "ic_all_xr","name": "修容", "index": 5},
+      {"icon": "ic_all_brow","name": "眉毛", "index": 6},
+      {"icon": "ic_all_yy","name": "眼影", "index": 7},
+      {"icon": "ic_all_eye_line","name": "眼线", "index": 8},
+      {"icon": "ic_all_eyelash","name": "眼睫毛", "index": 9},
+      {"icon": "ic_all_eyeball","name": "美瞳", "index": 10},
+      {"icon": "ic_all_eyepainting","name": "卧蚕", "index": 1},
+      {"icon": "ic_all_double_eyelid","name": "双眼皮", "index": 2}
+    ]
+  },
+  {
+    "name": "特效",
+    "type": 3,
+    "routerIndex" : 0,
+    "icon": "ic_main_sticker",
+    "color": "#E5E2F4",
+    "items": [
+      {"icon": "ic_all_2d","name": "2D贴纸", "index": 1},
+      {"icon": "ic_all_3d","name": "3D贴纸", "index": 2},
+      {"icon": "ic_all_hand","name": "手势贴纸", "index": 3},
+      {"icon": "ic_all_bg","name": "分割", "index": 4},
+      {"icon": "ic_all_face_change","name": "脸部变形", "index": 5},
+      {"icon": "ic_all_lizi","name": "粒子效果", "index": 6},
+      {"icon": "ic_all_cat","name": "动物", "index": 7},
+      {"icon": "ic_all_fsh","name": "影分身", "index": 8},
+      {"icon": "ic_all_big_head","name": "大头特效", "index": 9},
+      {"icon": "ic_all_kl","name": "扣脸", "index": 10},
+      {"icon": "ic_all_play","name": "特效玩法", "index": 11},
+      {"icon": "ic_all_tryon","name": "TryOn", "index": 13}
+    ]
+  },
+  {
+    "name": "风格",
+    "type": 4,
+    "routerIndex" : 0,
+    "icon": "ic_main_style",
+    "color": "#E5E5DD",
+    "items": [
+      {"icon": "ic_all_one_beauty","name": "一键美颜", "index": 0},
+      {"icon": "ic_all_nature","name": "自然", "index": 1},
+      {"icon": "ic_all_qzh","name": "轻妆", "index": 2},
+      {"icon": "ic_all_fashion","name": "流行", "index": 3}
+    ]
+  },
+  {
+    "name": "Avatar",
+    "type": 5,
+    "routerIndex" : 12,
+    "icon": "ic_main_avatar",
+    "color": "#D4E8E3",
+    "items": [
+      {"icon": "ic_all_animal","name": "动物类", "index": 12},
+      {"icon": "ic_all_2cy","name": "二次元", "index": 12},
+      {"icon": "ic_all_cartoon","name": "卡通类", "index": 12}
+    ]
+  },
+  {
+    "name": "美体",
+    "type": 6,
+    "routerIndex" : 3,
+    "icon": "ic_main_body_beauty",
+    "color": "",
+    "items": [
+
+    ]
+  },
+  {
+    "name": "全部效果",
+    "type": 8,
+    "routerIndex" : 0,
+    "icon": "ic_main_all",
+    "color": "",
+    "items": [
+
+    ]
+  }
+]

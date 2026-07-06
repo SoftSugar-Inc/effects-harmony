@@ -1,26 +1,26 @@
 import BeautyGroup from './BeautyGroup';
-import BeautyObject from './BeautyObject';
-import { BeautyType } from 'libentry.so'
+import BeautyObject, { BeautyParam } from './BeautyObject';
 import { common } from '@kit.AbilityKit';
 import { ArrayList, HashMap, HashSet, LightWeightMap, util, Vector } from '@kit.ArkTS';
 import { ifaa } from '@kit.OnlineAuthenticationKit';
+import BeautyCleanObject from './BeautyCleanObject';
 
 enum Category {
   Beauty,
-  Sharpe,
+  Reshape,
   Plastic2D,
-  Adjust
+  SkinDetail,
+  Body,
+  Plastic3D,
+  Adjust,
+  Bokeh,
 }
 
 export default class BeautyResourceManager {
   private context = getContext(this) as common.UIAbilityContext
   private static instance: BeautyResourceManager
   public dataSource: ArrayList<BeautyGroup> = new ArrayList()
-  public defaultEffects: ArrayList<BeautyObject> = new ArrayList()
-  public whiteMutexs: ArrayList<BeautyObject> = new ArrayList()
-  public smoothMutexs: ArrayList<BeautyObject> = new ArrayList()
-
-  // public selectedBeautys: HashSet<BeautyObject> = new HashSet()
+  public defaultEffects: HashMap<string, BeautyObject> = new HashMap()
 
   private constructor() {
   }
@@ -36,76 +36,50 @@ export default class BeautyResourceManager {
     return BeautyResourceManager.instance
   }
 
-  public resetMutex(obj: BeautyObject | undefined) {
-    if (obj == undefined) {
-      return
-    }
-    if (obj.cleanObject.type == 101) { //美白
-      this.whiteMutexs.forEach(element => {
-        element.currentStrength = 0.0
-      })
-    } else if (obj.cleanObject.type == 103) { //磨皮
-      this.smoothMutexs.forEach(element => {
-        element.currentStrength = 0.0
-      })
-    }
-
-  }
 
   private resetAssets() {
     this.dataSource.clear()
     this.defaultEffects.clear()
-    this.whiteMutexs.clear()
-    this.smoothMutexs.clear()
   }
 
   private generateBeautyResource() {
     this.resetAssets()
     let baseBeauty = this.generateBaseBeautyResource()
-    baseBeauty.beauties.forEach(element => {
-      if (element.currentStrength && element.currentStrength > 0) {
-        this.defaultEffects.add(element)
-      }
-      if (element.cleanObject.type == 101) { //美白互斥
-        this.whiteMutexs.add(element)
-      }
-      if (element.subBeauties != undefined && element.subBeauties.length > 0) {
-        element.subBeauties.forEach(subElement => {
-          if (subElement.cleanObject.type == 101) {
-            this.whiteMutexs.add(subElement)
-          }
-        })
-      }
-
-      if (element.cleanObject.type == 103) { //磨皮互斥
-        this.smoothMutexs.add(element)
-      }
-    });
-
     let reshapeBeauty = this.generateReshapeBeautyResource()
-    reshapeBeauty.beauties.forEach(element => {
-      if (element.currentStrength && element.currentStrength > 0) {
-        this.defaultEffects.add(element)
-      }
-    })
-
     let plastic2d = this.generateSharpe2DBeautyResource()
-    plastic2d.beauties.forEach(element => {
-      if (element.currentStrength && element.currentStrength > 0) {
-        this.defaultEffects.add(element)
-      }
-    })
+    let plastic3d = this.generateSharpe3DBeautyResource()
     let toneBeauty = this.generateToneBeautyResource()
-    toneBeauty.beauties.forEach(element => {
+    let bokehBeauty = this.generateBokehResource()
+  /*
+    let skinDetail = this.generateSkinDetailResource()
+    skinDetail.beauties.forEach(element => {
       if (element.currentStrength && element.currentStrength > 0) {
         this.defaultEffects.add(element)
       }
     })
+  */
+
+    let body = this.generateBodyDetailResource()
 
     this.dataSource.add(baseBeauty)
     this.dataSource.add(reshapeBeauty)
     this.dataSource.add(plastic2d)
+    //this.dataSource.add(skinDetail)
+    this.dataSource.add(body)
+    this.dataSource.add(plastic3d)
     this.dataSource.add(toneBeauty)
+    this.dataSource.add(bokehBeauty)
+
+    this.dataSource.forEach((group)=>{
+      group.beauties.forEach(element=>{
+        this.defaultEffects.set(element.cleanObject.uid, element)
+        if (element.subBeauties) {
+          element.subBeauties.forEach(subElement=>{
+            this.defaultEffects.set(subElement.cleanObject.uid, subElement)
+          })
+        }
+      })
+    })
   }
 
   private getAssetsFromJson(catetory: Category): BeautyObject[] {
@@ -114,11 +88,26 @@ export default class BeautyResourceManager {
       case Category.Beauty:
         fileName = "beauty.json"
         break;
-      case Category.Sharpe:
-        fileName = "sharpe.json"
+      case Category.Reshape:
+        fileName = "reshape.json"
         break;
       case Category.Adjust:
         fileName = "adjust.json"
+        break;
+      case Category.Plastic2D:
+        fileName = "plastic.json"
+        break;
+      case Category.Plastic3D:
+        fileName = "plastic_3d.json"
+        break;
+      case Category.SkinDetail:
+        fileName = "skin.json"
+        break;
+      case Category.Bokeh:
+        fileName = "bokeh.json"
+        break;
+      case Category.Body:
+        fileName = "body.json"
         break;
     }
     let fileContent = this.context.resourceManager.getRawFileContentSync("beauty" + "/" + fileName)
@@ -127,17 +116,34 @@ export default class BeautyResourceManager {
     if (jsonStr.length <= 0) {
       return []
     }
-    const jsonArray: BeautyObject[] = JSON.parse(jsonStr)
+    const jsonArray: BeautyCleanObject[] = JSON.parse(jsonStr)
     let result: BeautyObject[] = []
     for (let index = 0; index < jsonArray.length; index++) {
       const element = jsonArray[index]
-      let item = BeautyObject.fromJson(element)
+      let item = new BeautyObject(element)
+      if (element.sub_beauties && element.sub_beauties.length > 0) {
+        item.subBeauties = new Array()
+        for (let i = 0; i < element.sub_beauties.length; i++) {
+          item.subBeauties[i] = new BeautyObject(element.sub_beauties[i])
+        }
+      }
+
+      if (element.sub_params && element.sub_params.length > 0) {
+        item.subParams = new Array()
+        for (let i = 0; i < element.sub_params.length; i++) {
+          item.subParams[i] = new BeautyParam(element.sub_params[i])
+        }
+      }
       result.push(item)
     }
     return result
   }
-  private getAndroidJsonObjFromJson(): object[] {
-    let fileContent = this.context.resourceManager.getRawFileContentSync("beauty/plastic.json")
+  private getAndroidJsonObjFromJson(catetory: Category): object[] {
+    let fileName = ""
+    switch (catetory) {
+
+    }
+    let fileContent = this.context.resourceManager.getRawFileContentSync("beauty" + "/" + fileName)
     let decoder = util.TextDecoder.create();
     let jsonStr = decoder.decodeWithStream(fileContent)
     if (jsonStr.length <= 0) {
@@ -163,7 +169,7 @@ export default class BeautyResourceManager {
 
     let beautyGroup = new BeautyGroup('美形',
 
-      this.getAssetsFromJson(Category.Sharpe)
+      this.getAssetsFromJson(Category.Reshape),true
     )
     return beautyGroup
   }
@@ -171,54 +177,50 @@ export default class BeautyResourceManager {
   //2d微整形数据
   private generateSharpe2DBeautyResource(): BeautyGroup{
 
-    let jsonArray = this.getAndroidJsonObjFromJson()
-
-    let objs : BeautyObject[]=new Array(jsonArray.length)
-    for (let index = 0; index < jsonArray.length; index++) {
-      const element = jsonArray[index];
-      objs[index] = new BeautyObject(
-        element['enum_des'],
-        element['select_icon_nor_res'],
-        element['select_icon_press_res'],
-        element['st_beauty_type'],
-        false
-      )
-      objs[index].currentStrength = element['def_strength'] as number
-      objs[index].cleanObject.defaultStrength = element['def_strength'] as number
-      objs[index].cleanObject.start_center = element['start_center'] as boolean
-      objs[index].cleanObject.other_mutual_beauty_type = element['other_mutual_beauty_type'] as BeautyType[]
-
-      if (element['subBeauties'] != undefined) {
-        let subJson =element['subBeauties'] as object[]
-        let subObjs: BeautyObject[] = new Array(subJson.length)
-        for (let subIndex = 0; subIndex < subObjs.length; subIndex++) {
-          const subObj = subJson[subIndex];
-            subObjs[subIndex] = new BeautyObject(
-              subObj['enum_des'],
-              subObj['select_icon_nor_res'],
-              subObj['select_icon_press_res'],
-              subObj['st_beauty_type'],
-            false
-          )
-          subObjs[subIndex].currentStrength = subObj['def_strength'] as number
-          subObjs[subIndex].cleanObject.defaultStrength = subObj['def_strength'] as number
-          subObjs[subIndex].cleanObject.start_center = subObj['start_center'] as boolean
-          subObjs[subIndex].cleanObject.other_mutual_beauty_type = subObj['other_mutual_beauty_type'] as BeautyType[]
-          objs[index].subBeauties = subObjs
-        }
-      }
-    }
-    let beautyGroup = new BeautyGroup('微整形',objs)
+    let beautyGroup = new BeautyGroup('微整形',this.getAssetsFromJson(Category.Plastic2D),true)
     return beautyGroup
   }
 
-  // 调整数据
+  //3d微整形数据
+  private generateSharpe3DBeautyResource(): BeautyGroup{
+
+
+    let beautyGroup = new BeautyGroup('3d微整形',this.getAssetsFromJson(Category.Plastic3D))
+    return beautyGroup
+  }
+
+  // 皮肤细节
+  private generateSkinDetailResource(): BeautyGroup {
+
+
+    let beautyGroup = new BeautyGroup('肤质',this.getAssetsFromJson(Category.SkinDetail))
+    return beautyGroup
+  }
+
+  // 美体
+  private generateBodyDetailResource(): BeautyGroup {
+
+
+    let beautyGroup = new BeautyGroup('美体',this.getAssetsFromJson(Category.Body),true)
+    return beautyGroup
+  }
+
+
+  // 调整
   private generateToneBeautyResource(): BeautyGroup {
 
     let beautyGroup = new BeautyGroup('调整',
 
       this.getAssetsFromJson(Category.Adjust)
     )
+    return beautyGroup
+  }
+
+  //背景虚化
+  // 调整
+  private generateBokehResource(): BeautyGroup {
+
+    let beautyGroup = new BeautyGroup('背景虚化',this.getAssetsFromJson(Category.Bokeh))
     return beautyGroup
   }
 }

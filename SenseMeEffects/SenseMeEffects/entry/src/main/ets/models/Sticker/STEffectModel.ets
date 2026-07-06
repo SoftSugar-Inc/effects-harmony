@@ -21,9 +21,10 @@ export class STEffectModel implements STMaterial {
   pkgLocalPath : string = ""
   state : CellState = CellState.NeedDonwload
   type : number = 0
-  packageId: number = 0
-  constructor(name?:string, thumbnail?:string, pkgUrl?:string) {
+  packageId: number = -1
+  constructor(name?:string, thumbnail?:string, pkgUrl?:string, id? : number) {
     this.name = name
+    this.id = id
     this.thumbnail = thumbnail
     this.pkgUrl = pkgUrl
   }

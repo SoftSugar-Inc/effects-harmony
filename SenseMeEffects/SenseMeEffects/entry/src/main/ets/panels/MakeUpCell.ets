@@ -31,3 +31,4 @@ export struct MakeUpCell {
     .height('100%')
   }
 }
+

@@ -10,7 +10,12 @@
     },
     {
       "name": "beauty_panel_color",
-      "value": "#2A2A2A"
+      "value": "#9A2A2A2A"
+    }
+  ,
+    {
+      "name": "selected_color",
+      "value": "#FFCC60FF"
     }
   ]
 }

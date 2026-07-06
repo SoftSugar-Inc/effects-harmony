@@ -1,35 +1,34 @@
 import Camera from '../camera/Camera'
-import { common } from '@kit.AbilityKit';
+import { common, sendableContextManager } from '@kit.AbilityKit';
 import PermissionManager from "../utils/Permission"
-import XComponentContext from '../interface/XComponentContext';
 import { CommonConstant as Common } from '../common/CommonConstant';
-import Image from '../interface/types'
-import Logger from '../utils/Logger'
 import { image } from '@kit.ImageKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { fileIo } from '@kit.CoreFileKit';
 import fs from '@ohos.file.fs';
-import media from '@ohos.multimedia.media';
-import { componentUtils, display, router } from '@kit.ArkUI'
-import libstmobile, { EffectsMode, PixelFormat, BeautyParamType} from 'libentry.so'
-import { BeautyType } from 'libentry.so'
-import { RotateType } from 'libentry.so'
-import { promptAction } from '@kit.ArkUI'
-import photoAccessHelper from '@ohos.file.photoAccessHelper'
-import FilterObject from '../models/FilterObject'
-// import BeautyCleanObject from '../models/BeautyCleanObject'
+import {  display, router } from '@kit.ArkUI'
+import libstmobile, { EffectsMode, PixelFormat, BeautyParamType,MeshType, st_effect_3D_beauty_part_info_t} from '@softsugar/mars_effects'
+import { BeautyType } from '@softsugar/mars_effects'
+
 import { FilterPanel } from '../panels/FilterPanel'
 import { BeautyPanel } from '../panels/BeautyPanel'
-import { PreviewBottomPanel } from '../panels/PreviewBottomPanel'
-import sensor from "@ohos.sensor"
+import { PanelState, PreviewBottomPanel } from '../panels/PreviewBottomPanel'
 import { camera } from '@kit.CameraKit';
-import { STRecorder, ICallBack } from '@ohos/stplayer'
-import BeautyObject from '../models/Beauty/BeautyObject';
 import BeautyResourceManager from '../models/Beauty/BeautyResourceManager';
 import { StickerPanel } from '../panels/StickerPanel';
 import { MakeUpPanel } from '../panels/MakeUpPanel';
-import { EffectMode, STDefines } from '../common/STDefines';
-import { DetectType } from '../models/native_js_object/HumanAction';
+import { TryOnPanel } from '../panels/TryOnPanel';
+import { HomeParam, HomeType, STDefines } from '../common/STDefines';
+import { DetectType, STCustomEvent } from '../models/native_js_object/DetectType';
+import DBManager from '../models/DBJson/DBManager';
+import { EventBus, EventType } from '../utils/EventBus';
+import { singletonContext } from '../utils/SingletonContext';
+import { MessageEvents, taskpool, ThreadWorkerPriority, worker } from '@kit.ArkTS';
+import { VideoRecordPanel } from '../panels/VideoRecordPanel';
+import { CameraData, PageMode } from '../workers/CameraData';
+import { Singleton } from '../workers/Singleton';
+import { ViewData } from '../workers/ViewData';
+import { LoadingView } from '../utils/LoadingView';
 
 
 const context = getContext(this) as common.UIAbilityContext;
@@ -44,33 +43,64 @@ enum Resolution {
   r1280x720 = 1
 }
 
+// 底部面板类型枚举 - 使用位掩码支持多面板组合显示
+enum BottomPanelType {
+  NONE = 0,
+  BOTTOM = 1 << 0,     // 底部主面板 (1)
+  STICKER = 1 << 1,    // 贴纸面板 (2)
+  MAKEUP = 1 << 2,     // 美妆面板 (4)
+  FILTER = 1 << 3,     // 滤镜面板 (8)
+  BEAUTY = 1 << 4,     // 美颜面板 (16)
+  RECORD = 1 << 5,     // 录制面板 (32)
+  TRYON = 1 << 6       // 试穿面板 (64)
+}
+
 @Entry
 @Component
 struct CameraPreview {
-  @State private cameraInstance: Camera = new Camera();
   @State photoAspectRatio: number = 1080.0 / 1920.0
-  private flag: boolean = false
-  private snapshoting: boolean = false
-  @State isRecording: boolean = false
   private comparing: boolean = false
-  private outputArrayBuffer: ArrayBuffer | undefined
-  private curRotate: RotateType = RotateType.ROTATE_0
-  private cnt = 0
-  private lastTime = 0
+
   private selectedPosition: camera.CameraPosition = camera.CameraPosition.CAMERA_POSITION_FRONT
   private resolutions: Array<camera.Size> = [{ width: 1920, height: 1080 }, { width: 1280, height: 720 }]
   private selectedResolution: Resolution = Resolution.r1280x720
-  private recordPath = getContext(this).cacheDir + "/record.mp4";
-  @State filterPanelVisibility: boolean = false
-  @State beautyPanelVisibility: boolean = false
-  @State stickerVisiabilty : boolean = false
-  @State makeUpVisiabilty : boolean = false
-  @State bottomViewVisiablity : boolean = true
-  @State resolutionResource: Resource = $r('app.media.preview_resolution_720')
-  private recordCtr: boolean = false
-  private humanActionHandle: ArrayBuffer | undefined
-  @State subDataSource: BeautyObject[] | undefined = undefined
+  // 使用位掩码管理面板状态，支持多面板组合显示
+  @State currentPanels: number = BottomPanelType.BOTTOM
 
+  // 辅助方法：检查面板是否显示
+  private isPanelVisible(panel: BottomPanelType): boolean {
+    return (this.currentPanels & panel) !== 0
+  }
+
+  // 辅助方法：显示单个面板（与底部主面板互斥）
+  private showPanel(panel: BottomPanelType): void {
+    // 录制面板独占
+    if (panel === BottomPanelType.RECORD) {
+      this.currentPanels = BottomPanelType.RECORD
+      return
+    }
+    // 底部主面板与其他子面板互斥
+    if (panel === BottomPanelType.BOTTOM) {
+      this.currentPanels = BottomPanelType.BOTTOM
+      return
+    }
+    // 子面板：隐藏底部主面板，显示当前子面板
+    this.currentPanels = (this.currentPanels & ~BottomPanelType.BOTTOM) | panel
+  }
+
+  // 辅助方法：隐藏底部主面板并显示子面板（保持原有子面板显示状态）
+  private showSubPanel(panel: BottomPanelType): void {
+    this.currentPanels = (this.currentPanels & ~BottomPanelType.BOTTOM) | panel
+  }
+
+  @State resolutionResource: Resource = $r('app.media.preview_resolution_720')
+
+  loadingView: LoadingView = new LoadingView();
+
+  private cameraData = new CameraData()
+  private cameraWorker : worker.ThreadWorker = new worker.ThreadWorker('entry/ets/workers/CameraWorker',{
+    priority: 0  // 设置为高优先级
+  });
   private isPageHide = false;
   build() {
     Stack() {
@@ -99,19 +129,17 @@ struct CameraPreview {
               .height(30)
               .margin({ right: 10 })
               .onClick(() => {
-                this.cameraInstance.beforeChange().then(() => {
-                  this.selectedResolution =
-                    this.selectedResolution == Resolution.r1920x1080 ? Resolution.r1280x720 : Resolution.r1920x1080
-                  this.resolutionResource =
-                    this.selectedResolution == Resolution.r1920x1080 ? $r('app.media.preview_resolution_1080') :
-                    $r('app.media.preview_resolution_720')
-                  const resolution = this.resolutions[this.selectedResolution]
-                  this.photoAspectRatio = resolution.height / resolution.width
-                  let displayInfo = display.getDefaultDisplaySync()
-                  libstmobile.updateWindowSize(displayInfo.width, displayInfo.width /this.photoAspectRatio)
-                  this.initCamera(this.selectedPosition, resolution)
-                }).catch((error: BusinessError) => {
-                })
+                this.selectedResolution =
+                  this.selectedResolution == Resolution.r1920x1080 ? Resolution.r1280x720 : Resolution.r1920x1080
+                this.resolutionResource =
+                  this.selectedResolution == Resolution.r1920x1080 ? $r('app.media.preview_resolution_1080') :
+                  $r('app.media.preview_resolution_720')
+                const resolution = this.resolutions[this.selectedResolution]
+                this.photoAspectRatio = resolution.height / resolution.width
+                let displayInfo = display.getDefaultDisplaySync()
+                libstmobile.updateWindowSize(displayInfo.width, displayInfo.width /this.photoAspectRatio)
+
+                this.changeCameraByWorker()
               })
 
             Blank()
@@ -124,21 +152,15 @@ struct CameraPreview {
               .height(23)
               .margin({ right: 10 })
               .onClick(() => {
-                this.cameraInstance.beforeChange().then(() => {
-                  this.selectedPosition = this.selectedPosition == camera.CameraPosition.CAMERA_POSITION_BACK ?
-                  camera.CameraPosition.CAMERA_POSITION_FRONT : camera.CameraPosition.CAMERA_POSITION_BACK
-                  this.initCamera(this.selectedPosition, this.resolutions[this.selectedResolution])
-                  if (this.isRecording) {
-                    this.stopRecordVideo()
-                  }
-                }).catch((error: BusinessError) => {
-                  console.log(`@camera change error: ${error}`)
-                })
+                this.selectedPosition = this.selectedPosition == camera.CameraPosition.CAMERA_POSITION_BACK ?
+                camera.CameraPosition.CAMERA_POSITION_FRONT : camera.CameraPosition.CAMERA_POSITION_BACK
+                this.changeCameraByWorker()
               })
           }
           .width('100%')
           .height(44)
           .backgroundColor(Color.White)
+          .visibility(this.isPanelVisible(BottomPanelType.RECORD) ? Visibility.Hidden : Visibility.Visible)
 
           Stack({ alignContent: Alignment.Top }) {
             XComponent({
@@ -149,162 +171,105 @@ struct CameraPreview {
               .onLoad(()=>{
                 this.onXcomponentLoad()
               })
+              .onDestroy(()=>{
+                // 不在这里释放,由 aboutToDisappear 统一处理
+              })
+              .backgroundColor(Color.Black)
               .width('100%')
               .aspectRatio(this.photoAspectRatio)
           }
         }
         .width('100%')
       }
+      .priorityGesture(
+        TapGesture({ count: 2 })
+          .onAction(() => {
+            this.changeCustomEvent(true)
+          }),
+      )
       .onClick(()=>{
-        this.stickerVisiabilty = false;
-        this.makeUpVisiabilty = false;
-        this.filterPanelVisibility = false;
-        this.beautyPanelVisibility = false;
-        this.bottomViewVisiablity = true;
+        if (!this.isPanelVisible(BottomPanelType.TRYON)) {
+          // 重置为主面板（关闭所有子面板）
+          this.currentPanels = BottomPanelType.BOTTOM
+        }
+        this.changeCustomEvent(false)
+        EventBus.emitEvent(EventType.OnXComponentClick)
       })
       .height('100%')
-      PreviewBottomPanel({
-          onSnapshotClick: () => {
-            PermissionManager.requestPermissions(['ohos.permission.WRITE_MEDIA']).then((permission) => {
-              if (permission) {
-                this.snapshoting = true
-                libstmobile.resetPixelReader()
-              }
-            })
+      if (this.isPanelVisible(BottomPanelType.RECORD)){
+        VideoRecordPanel({
+          onRecordSaveClick: () => {
+            this.saveRecordVideo()
           },
-          onEntranceClick: (index) => {
-            if (index == 0){
-              this.stickerVisiabilty = true
-              this.bottomViewVisiablity = !this.stickerVisiabilty
-            }else if(index == 1) {
-              this.makeUpVisiabilty = true
-              this.bottomViewVisiablity = !this.makeUpVisiabilty
-            }else if (index == 3) {
-              this.filterPanelVisibility = true
-              this.bottomViewVisiablity = !this.filterPanelVisibility
-            } else if (index == 4) {
-              this.beautyPanelVisibility = true
-              this.bottomViewVisiablity = !this.beautyPanelVisibility
-            }
-
+          onRecordDeleteClick: () => {
+            this.deleteRecordVideo()
           },
-          onRecorrOnClick: () => {
-            this.startRecordVideo()
-            libstmobile.resetPixelReader()
-          },
-          onRecorrOffClick: () => {
+          onRecordStopClick: () => {
             this.stopRecordVideo()
           },
-          onStopRecorrOnClick: () => {
-            if (this.isRecording) {
-              this.recordCtr = false
-              this.stopRecordVideo()
-            }
-          },
-          isRecording: this.isRecording
         })
           .width('100%')
-          .height(120)
-          .visibility(this.bottomViewVisiablity ? Visibility.Visible : Visibility.Hidden)
-      StickerPanel({
-          didSelectedMaterial: (model) => {
-            const result = libstmobile.changePackageByPath(model.pkgLocalPath)
+          .height('100%')
+      }
 
-            let trigger = libstmobile.getTriggerActions()
-            let detectConfig =  libstmobile.getDetectConfig()
-            if (trigger != 0) {
-              this.showTrigger(trigger)
-            }
-            else{
-              this.showTrigger(detectConfig)
-            }
-
-            model.packageId = result
+      PreviewBottomPanel({
+          onSnapshotClick: () => {
+            this.cameraData.pageData.isSavePicture = true
           },
-          didDeselectedMaterial: (model) => {
-            const result = libstmobile.removePackage(model.packageId)
-          },
-          onClearMaterial: (model) => {
-            if (model) {
-              const result = libstmobile.removePackage(model.packageId)
+          onEntranceClick: (index) => {
+            // 根据索引切换到对应子面板
+            // 原逻辑：只设置当前子面板，不关闭其他子面板
+            const panelMap: Record<number, BottomPanelType> = {
+              0: BottomPanelType.STICKER,
+              1: BottomPanelType.MAKEUP,
+              3: BottomPanelType.FILTER,
+              4: BottomPanelType.BEAUTY
+            }
+            if (panelMap[index] !== undefined) {
+              this.showSubPanel(panelMap[index])
             }
           },
-          /*,
-          onStickerClose: (close) => {
-            this.stickerVisiabilty = false
-            this.bottomViewVisiablity = !this.stickerVisiabilty
-          }*/
+          onRecordOnClick: ()=>{
+            this.startRecordVideo()
+          },
+          panelState : 2
         })
+          .width('100%')
+          .height(264)
+          .visibility(this.isPanelVisible(BottomPanelType.BOTTOM) ? Visibility.Visible : Visibility.Hidden)
+      StickerPanel({
+        panelState:PanelState.Preview
+      })
+        .margin({bottom : 0})
           .width('100%')
           .height(300)
-          .visibility(this.stickerVisiabilty ? Visibility.Visible : Visibility.Hidden)
+          .visibility(this.isPanelVisible(BottomPanelType.STICKER) ? Visibility.Visible : Visibility.Hidden)
       MakeUpPanel({
-          didSelectedMaterial: (model) => {
-            const result = libstmobile.setBeautyPackageByPath(model.type, model.pkgLocalPath)
-          },
-          didDeselectedMaterial: (type) => {
-            const result = libstmobile.setBeautyPackageByPath(type, "")
-          },
-          /*  onMakeUpClose: (close) => {
-              this.makeUpVisiabilty = false
-              this.bottomViewVisiablity = !this.stickerVisiabilty
-            },*/
-          onMakeUpStrengthChanged: (type, strength) => {
-            //染发系数
-            if(type == 401){
-              strength *= 0.22
-            }
-            const result = libstmobile.setBeautyStrength(type, strength / 100.0)
-          }
+          panelState: PanelState.Preview,
         })
           .width('100%')
           .height(220)
-          .visibility(this.makeUpVisiabilty ? Visibility.Visible : Visibility.Hidden)
+          .visibility(this.isPanelVisible(BottomPanelType.MAKEUP) ? Visibility.Visible : Visibility.Hidden)
       FilterPanel({
+          panelState: PanelState.Preview,
         })
           .height(220)
           .width('100%')
-          .visibility(this.filterPanelVisibility ? Visibility.Visible : Visibility.Hidden)
+          .visibility(this.isPanelVisible(BottomPanelType.FILTER) ? Visibility.Visible : Visibility.Hidden)
       BeautyPanel({
-         /* onBeauSelected: (beauty: BeautyObject) => {
-            if (beauty.cleanObject.path.length > 0) {
-              let fileContent = resourceManager.getRawFileContentSync('beauties/' + beauty.cleanObject.path)
-              const buffer = fileContent.buffer.slice(0);
-              libstmobile.setBeautyPackageByBuffer(beauty.cleanObject.type, buffer)
-            }
-            if (beauty.cleanObject.mode > 0) {
-              libstmobile.setBeautyMode(beauty.cleanObject.type, beauty.cleanObject.mode)
-            }
-            libstmobile.setBeautyParam(BeautyParamType.EFFECT_BEAUTY_PARAM_ENABLE_WHITEN_SKIN_MASK, beauty.cleanObject.need_open_whiten_skin_mask?1:0)
-            libstmobile.setBeautyStrength(beauty.cleanObject.type, (beauty.currentStrength?beauty.currentStrength:0))
-          },*/
-
-          //fix 70907
-          onBeautyFirstChanged:(beauty: BeautyObject)=>{
-            if (beauty.cleanObject.path.length > 0) {
-              let fileContent = resourceManager.getRawFileContentSync('beauties/' + beauty.cleanObject.path)
-              const buffer = fileContent.buffer.slice(0);
-              libstmobile.setBeautyPackageByBuffer(beauty.cleanObject.type, buffer)
-            }
-            else {
-              libstmobile.setBeautyPackageByBuffer(beauty.cleanObject.type, null)
-            }
-            libstmobile.setBeautyMode(beauty.cleanObject.type, beauty.cleanObject.mode)
-            libstmobile.setBeautyParam(BeautyParamType.EFFECT_BEAUTY_PARAM_ENABLE_WHITEN_SKIN_MASK, beauty.cleanObject.need_open_whiten_skin_mask?1:0)
-          },
-          onBeautyStrengthChanged: (beauty: BeautyObject) => {
-            libstmobile.setBeautyStrength(beauty.cleanObject.type,  (beauty.currentStrength?beauty.currentStrength:0))
-          },
-          onResetOrClear: (beauties: BeautyObject[]) => {
-            beauties.forEach(element => {
-              libstmobile.setBeautyStrength(element.cleanObject.type, element.currentStrength)
-            })
-          },
-          subDataSource:this.subDataSource
+          panelState: PanelState.Preview,
+        })
+          .height(240)
+          .width('100%')
+          .visibility(this.isPanelVisible(BottomPanelType.BEAUTY) ? Visibility.Visible : Visibility.Hidden)
+      TryOnPanel({
+        onSnapshotClick: () => {
+          this.cameraData.pageData.isSavePicture = true
+        },
         })
           .height(220)
           .width('100%')
-          .visibility(this.beautyPanelVisibility ? Visibility.Visible : Visibility.Hidden)
+          .visibility(this.isPanelVisible(BottomPanelType.TRYON) ? Visibility.Visible : Visibility.Hidden)
       //对比按钮
       Image($r('app.media.comparison'))
         .width(30)
@@ -316,322 +281,184 @@ struct CameraPreview {
             this.comparing = false
           }
         })
-        .position({ right: 10 , bottom : this.stickerVisiabilty ? 310:230})
+        .visibility(this.isPanelVisible(BottomPanelType.RECORD) ? Visibility.Hidden : Visibility.Visible)
+        .position({ right: 10 , bottom : this.isPanelVisible(BottomPanelType.STICKER) ? 310 : 230})
     }
     .alignContent(Alignment.Bottom)
     .width('100%')
     .height('100%')
+    .backgroundColor(Color.White)
   }
 
+  changeCameraByWorker(){
 
-  async initCamera(cameraPosition: camera.CameraPosition, resolution: camera.Size) {
-    await this.cameraInstance.initCamera(cameraPosition, resolution)
-    this.cameraInstance.captureOutputDidOutputImage = (nextImage: image.Image) => {
-      this.cnt++
-      if (this.lastTime == 0) {
-        this.lastTime = Date.now()
-      } else {
-        let currentTime = Date.now()
-        let delta = currentTime - this.lastTime
-        if (delta >= 1000) {
-          this.lastTime = currentTime
-          this.cnt = 0
-        }
-      }
-      if (!this.flag) {
-        nextImage.getComponent(4, (err: BusinessError, imgComponent: image.Component) => {
-          if (err || imgComponent === undefined) {
-            nextImage.release();
-            return;
-          }
-          let buffer: ArrayBuffer;
-          if (imgComponent.byteBuffer as ArrayBuffer) {
-            buffer = imgComponent.byteBuffer
-            let width = nextImage.size.width
-            let height = nextImage.size.height
-            let rotate =
-              (this.selectedPosition == camera.CameraPosition.CAMERA_POSITION_FRONT) ? RotateType.ROTATE_270 :
-              RotateType.ROTATE_90
-            let mirror = (this.selectedPosition == camera.CameraPosition.CAMERA_POSITION_FRONT) ? true : false
+    this.cameraData.type = 'changeCamera'
+    this.cameraData.pageData.context = getContext()
+    this.cameraData.cameraPosition =  this.selectedPosition
+    this.cameraData.cameraWidth = this.resolutions[this.selectedResolution].width
+    this.cameraData.cameraHeight = this.resolutions[this.selectedResolution].height
+    this.cameraWorker.postMessageWithSharedSendable(this.cameraData)
+  }
+  initCameraByWorker(){
+    this.cameraData.type = 'initCamera'
+    this.cameraData.pageData.mode = PageMode.Preview
+    this.cameraData.cameraPosition =  this.selectedPosition
+    this.cameraData.cameraWidth = this.resolutions[this.selectedResolution].width
+    this.cameraData.cameraHeight = this.resolutions[this.selectedResolution].height
+    this.cameraData.pageData.context = getContext()
 
-            let bufferSize = this.snapshoting?nextImage.size.width * nextImage.size.height * 4:nextImage.size.width * nextImage.size.height * 3/2
-            if (this.outputArrayBuffer === undefined ||
-                this.outputArrayBuffer.byteLength != bufferSize){
-              this.outputArrayBuffer = new ArrayBuffer(bufferSize)
-            }
-            let inRotate : RotateType = globalThis.deviceRotate;
-            if (this.selectedPosition != camera.CameraPosition.CAMERA_POSITION_FRONT){
-              inRotate = ((4 - inRotate)%4) as RotateType
-            }
-            //this.comparing =true
-            let isDst = this.isRecording || this.snapshoting
-            let outFormat = this.snapshoting? PixelFormat.ST_PIX_FMT_RGBA8888 : PixelFormat.ST_PIX_FMT_NV21
-            libstmobile.process(buffer, PixelFormat.ST_PIX_FMT_NV21, width, height, width, inRotate,mirror,0,isDst?this.outputArrayBuffer:null,outFormat,rotate,this.comparing,false)
-            if (this.isRecording) {
-              let ret = STRecorder.pushVideoFrame(this.outputArrayBuffer, height, width)
-              if (ret != 0) {
-                console.log(`push video frame error ${ret}`);
-              }
-            }
-            if (this.snapshoting) {
-              this.snapshoting = false
-              let pixelBuffer = new Uint8Array(this.outputArrayBuffer)
-              this.myAsyncFunction(pixelBuffer, nextImage.size.height, nextImage.size.width)
-            }
-            nextImage.release();
-          } else {
-            nextImage.release();
-            return;
-          }
-        });
-      } else {
-        nextImage.release();
-      }
+    this.cameraWorker.postMessageWithSharedSendable(this.cameraData)
+
+    this.cameraWorker.onmessage = (e :MessageEvents)=>{
+      if(Singleton.flag ) return
+      let data = e.data as ViewData
+      //this.viewData = data
+      this.cameraData.type = "updatePageData"
+      this.cameraData.pageData.mCustomEvent = this.mCustomEvent
+      this.cameraData.pageData.isOrigin = this.comparing
+      this.cameraData.pageData.immediately = false
+
+      this.cameraWorker.postMessage(this.cameraData)
+      this.cameraData.pageData.isSavePicture = false
+      this.mCustomEvent = 0
     }
   }
-
-  uint8ArrayToArrayBuffer(uint8Array: Uint8Array) {
-    let arrayBuffer = new ArrayBuffer(uint8Array.length);
-    let bufferView = new Uint8Array(arrayBuffer);
-    bufferView.set(uint8Array);
-    return arrayBuffer;
-  }
-
-  myAsyncFunction(pixelBuffer: Uint8Array, width: number, height: number): Promise<void> {
-    return new Promise((resolve: Function) => {
-       for (let index = 0; index < width * height * 4; index += 4) {
-         let temp = pixelBuffer[index];
-         pixelBuffer[index] = pixelBuffer[index+2];
-         pixelBuffer[index+2] = temp;
-       }
-
-      image.createPixelMap(this.uint8ArrayToArrayBuffer(pixelBuffer), {
-        size: { width, height },
-        pixelFormat: image.PixelMapFormat.RGBA_8888,
-        editable: true
-      }).then((pixelMap) => {
-        this.savePixelMapToAlbum(pixelMap)
-      }).catch((error: BusinessError) => {
-        console.log(`@createPixelMap error ${error}`)
-      })
-    });
+  releaseCameraByWorker(){
+    this.cameraData.type = 'releaseCamera'
+    this.cameraWorker.postMessageWithSharedSendable(this.cameraData)
+    this.cameraWorker.terminate()
   }
 
   async onPageShow() {
-    let param = router.getParams() as Record<string, string>
-
-    this.stickerVisiabilty = param.mode == STDefines.effectStringResource[EffectMode.Sticker];
-    this.makeUpVisiabilty = param.mode == STDefines.effectStringResource[EffectMode.Makeup];
-    this.filterPanelVisibility = param.mode == STDefines.effectStringResource[EffectMode.Filter];
-    this.beautyPanelVisibility = param.mode == STDefines.effectStringResource[EffectMode.Beauty];
-    this.bottomViewVisiablity = param.mode == "";
     if (this.isPageHide) {
-      this.initCamera(this.selectedPosition, this.resolutions[this.selectedResolution])
+      this.changeCameraByWorker()
       this.isPageHide = false;
     }
   }
   onPageHide(): void {
-    if (this.isRecording) {
-      this.stopRecordVideo()
-    }
+    this.stopRecordVideo()
     this.isPageHide = true;
-    //this.cameraInstance.stop()
   }
   aboutToAppear(): void {
+    this.loadingView.showLoading({ msg: '初始化中...', isModal: true });
+
     BeautyResourceManager.getInstance().updateDataSource()
-    this.subDataSource = BeautyResourceManager.getInstance().dataSource[0].beauties
-    this.setDefaultValue()
+
+    if (globalThis.homeParam) {
+      // 根据入口类型设置初始面板（与原逻辑一致：只有一个面板显示）
+      switch (globalThis.homeParam.type) {
+        case HomeType.Sticker:
+        case HomeType.Avatar:
+          this.currentPanels = BottomPanelType.STICKER
+          break
+        case HomeType.Makeup:
+          this.currentPanels = BottomPanelType.MAKEUP
+          break
+        case HomeType.Filter:
+          this.currentPanels = BottomPanelType.FILTER
+          break
+        case HomeType.Beauty:
+        case HomeType.Body:
+          this.currentPanels = BottomPanelType.BEAUTY
+          break
+/*        case HomeType.TryOn:
+          this.currentPanels = BottomPanelType.TRYON
+          break*/
+        case HomeType.All:
+        case HomeType.Style:
+        default:
+          this.currentPanels = BottomPanelType.BOTTOM
+          break
+      }
+    }
+
  }
   onXcomponentLoad(): void {
+
+    // // 加载通用模型->加载GAN模型->加载3D微整形素材->恢复效果
     let result = libstmobile.InitializeByMode(EffectsMode.PREVIEW)
-    //const modelPath = this.writeModelToSandbox('M_SenseME_Face_Video_Template_p_4.0.0.model')
-    //this.humanActionHandle = libstmobile.st_mobile_human_action_create(modelPath, 0x00020000)
-    const models = resourceManager.getRawFileListSync(`models`)
-    models.forEach(model => {
-      const subModelPath = this.writeModelToSandbox(model,'models')
-      const result = libstmobile.addSubModelByPath(subModelPath)
+    taskpool.execute(InitTask).then(()=>{
+      setTimeout(()=>{
+        this.loadingView.hide();
+      },200)
+      console.log('onXcomponentLoad init success.')
+    }).catch((e: BusinessError) => {
+      this.loadingView.hide();
+      console.error('onXcomponentLoad init : ' + e)
     })
 
-    const aniModels = resourceManager.getRawFileListSync(`aniModels`)
-    aniModels.forEach(model => {
-      const subModelPath = this.writeModelToSandbox(model,'aniModels')
-      const result = libstmobile.addAnimalSubModelByPath(subModelPath)
-    })
     let displayInfo = display.getDefaultDisplaySync()
     libstmobile.updateWindowSize(displayInfo.width, displayInfo.width /this.photoAspectRatio)
+
+    Singleton.flag = false
     PermissionManager.requestPermissions(['ohos.permission.CAMERA']).then((permission) => {
       if (permission) {
-        this.initCamera(this.selectedPosition, this.resolutions[this.selectedResolution]);
-      }
-    })
-  }
-
-  async setDefaultValue(): Promise<void> {
-    try {
-      const result: string = await new Promise((resolve: Function) => {
-        setTimeout(() => {
-          this.setDefaultEffects()
-        }, 1000);
-      });
-    } catch (e) {
-      console.error(`Get exception: ${e}`);
-    }
-  }
-
-  setDefaultEffects(){
-    let defaultEffects = BeautyResourceManager.getInstance().defaultEffects
-    defaultEffects.forEach((beauty) =>{
-      if(beauty != undefined){
-        if (beauty.cleanObject.path.length > 0) {
-          let fileContent = resourceManager.getRawFileContentSync('beauties/' + beauty.cleanObject.path)
-          const buffer = fileContent.buffer.slice(0);
-          libstmobile.setBeautyPackageByBuffer(beauty.cleanObject.type, buffer)
-        }
-        if (beauty.cleanObject.mode > 0) {
-          libstmobile.setBeautyMode(beauty.cleanObject.type, beauty.cleanObject.mode)
-        }
-        libstmobile.setBeautyStrength(beauty.cleanObject.type, beauty.currentStrength)
+        this.initCameraByWorker()
       }
     })
   }
 
   aboutToDisappear() {
-    this.flag = true
-    this.cameraInstance.beforeChange()
-    libstmobile.makeEmpty()
-    //libstmobile.st_mobile_human_action_destroy(this.humanActionHandle)
-  }
-
-  savePixelMapToAlbum(pixelMap: PixelMap): void {
-    // encode image
-    let imagePacker = image.createImagePacker()
-    let packOpts: image.PackingOption = { format: "image/jpeg", quality: 98 };
-    imagePacker.packing(pixelMap, packOpts).then((outputArrayBuffer) => {
-      promptAction.showToast({ message: 'saving' })
-      let phAccessHelper = photoAccessHelper.getPhotoAccessHelper(context);
-      // Creating a Media File
-      phAccessHelper.createAsset(photoAccessHelper.PhotoType.IMAGE, 'jpg', (error, uri) => {
-        if (error) {
-          promptAction.showToast({
-            message: `create asset error ${JSON.stringify(error)}`,
-            duration: 1000
-          })
-        } else {
-          // Open the created media file and read the local file and convert it to ArrayBuffer for easy filling.
-          let file = fileIo.openSync(uri, fileIo.OpenMode.READ_WRITE)
-          // Write the read ArrayBuffer to the new media file.
-          let writeLen = fileIo.writeSync(file.fd, outputArrayBuffer)
-          promptAction.showToast({ message: 'save success', duration: 1000 })
-          fileIo.closeSync(file)
-        }
-      })
-    }).catch((error: BusinessError) => {
-      console.error('Failed to pack the image. And the error is: ' + error);
-    })
-  }
-
-  showDialog(message: string) {
-    promptAction.showDialog({
-      message: message,
-      buttons: [
-        {
-          text: '好的',
-          color: '#000000'
-        }
-      ],
-    })
-      .then(data => {
-        console.info('showDialog success, click button: ' + data.index);
-      })
+    DBManager.Instance().save()
+    Singleton.flag = true
+    this.releaseCameraByWorker();
   }
 
   startRecordVideo() {
-    PermissionManager.requestPermissions(['ohos.permission.WRITE_MEDIA']).then((permission) => {
-      if (permission) {
-        let phAccessHelper = photoAccessHelper.getPhotoAccessHelper(context);
-        let options: photoAccessHelper.CreateOptions = {
-          title: Date.now().toString()
-        };
-        phAccessHelper.createAsset(photoAccessHelper.PhotoType.VIDEO, 'mp4', options, (error, videoUri) => {
-          if (error) {
-            this.showDialog('输出视频路径设置失败')
-          } else {
-            let file: fs.File = fs.openSync(videoUri, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-            let setDataSourceCallback: ICallBack = {
-              callBackResult: (code: number) => {
-                if (code == 0) {
-                  let startCallback: ICallBack = {
-                    callBackResult: (code: number) => {
-                      if (code == 0) {
-                        this.isRecording = true;
-                      }
-                    }
-                  }
-                  STRecorder.startRecord(startCallback);
-                } else {
-                  this.showDialog('输出视频路径设置失败')
-                }
-              }
-            }
-            const resolution = this.resolutions[this.selectedResolution]
-            STRecorder.setRecorderDataSource(this.recordPath, file.fd, resolution.height, resolution.width,0,0,
-              setDataSourceCallback)
-          }
-        });
-      } else {
-        this.showDialog('请开启相册视频写入权限')
-      }
-    })
+    // 录制面板独占显示
+    this.currentPanels = BottomPanelType.RECORD
+
+    this.cameraData.type = 'startRecordVideo'
+    this.cameraWorker.postMessage(this.cameraData)
   }
 
   stopRecordVideo() {
-    this.isRecording = false;
-    let fd = STRecorder.stopRecord();
-    if (fd != 0) {
-      fs.close(fd).then((error) => {
-        if (error == null) {
-          promptAction.showToast({ message: 'video save success', duration: 1000 })
-        } else {
-          promptAction.showToast({ message: 'video save failure', duration: 1000 })
-        }
-      })
+    this.cameraData.type = 'stopRecordVideo'
+    this.cameraWorker.postMessage(this.cameraData)
+
+  }
+  saveRecordVideo() {
+    this.currentPanels = BottomPanelType.BOTTOM
+
+    this.cameraData.type = 'saveRecordVideo'
+    this.cameraWorker.postMessage(this.cameraData)
+  }
+  deleteRecordVideo() {
+    this.currentPanels = BottomPanelType.BOTTOM
+  }
+
+  @State mCustomEvent:number = 0
+  changeCustomEvent(doubleClick:boolean) {
+    this.mCustomEvent = libstmobile.getCustomEventConfig();
+    if (doubleClick) {
+      this.mCustomEvent &= ~STCustomEvent.ST_CUSTOM_EVENT_SCREEN_TAP;
     } else {
-      this.showDialog(`视频保存失败`)
+      this.mCustomEvent &= ~STCustomEvent.ST_CUSTOM_EVENT_SCREEN_DOUBLE_TAP;
     }
   }
 
-  getDeviceOrientation(): Promise<number> {
-    return new Promise((resolve: Function, reject: Function) => {
-      let orientation = 3
-      sensor.once(sensor.SensorId.ORIENTATION, (data: sensor.OrientationResponse) => {
-        if (data.gamma >= 70) {
-          orientation = 2
-        } else if (data.gamma <= -70) {
-          orientation = 0
-        } else if (data.gamma <= 10 && data.gamma >= -10) {
-          if (data.beta >= 70) {
-            orientation = 1
-          } else if (data.beta <= -70) {
-            orientation = 3
-          }
-        }
-        resolve(orientation)
-      })
-    })
-  }
+}
+//trigger dialog
 
-  writeModelToSandbox(modelName: string, dir:string): string {
+
+@Concurrent
+async function InitTask() {
+  let context: common.Context = sendableContextManager.convertToContext(singletonContext.getContext())
+  let resourceManager = context.resourceManager
+  let filesDir = context.filesDir
+
+  let writeModelToSandbox = (modelName: string, dir:string)=>{
     const modelPath = filesDir + '/' + modelName
     if (fs.accessSync(modelPath)) {
       return modelPath;
     }
     const fileContent = resourceManager.getRawFileContentSync(dir + '/' + modelName)
     const fileArrayBuffer = fileContent.buffer.slice(0)
-    this.writeBufferToPath(fileArrayBuffer, modelPath)
+    writeBufferToPath(fileArrayBuffer, modelPath)
     return modelPath
   }
 
-  writeBufferToPath(contentBuffer: ArrayBuffer, targetPath: string): void {
+  let writeBufferToPath = (contentBuffer: ArrayBuffer, targetPath: string)=> {
     if (fs.accessSync(targetPath)) {
       fs.unlinkSync(targetPath)
     }
@@ -640,123 +467,30 @@ struct CameraPreview {
     fs.closeSync(destFile)
   }
 
-  private customDialogComponentId: number = 0
-  showTrigger(actionNum: number){
-    let triggerTips = ""
-    let triggerIcon = ""
-    if((actionNum & DetectType.ST_MOBILE_EYE_BLINK) > 0){
-      triggerIcon = 'app.media.ic_trigger_blink'
-      triggerTips += "请眨眨眼"
-    }
-    if((actionNum & DetectType.ST_MOBILE_MOUTH_AH) > 0){
-      triggerIcon = 'app.media.ic_trigger_mouth'
-      triggerTips += "请张张嘴"
-    }
-    if((actionNum & DetectType.ST_MOBILE_HEAD_YAW) > 0){
-      triggerIcon = 'app.media.ic_trigger_shake'
-      triggerTips += "请摇摇头"
-    }
-    if((actionNum & DetectType.ST_MOBILE_HEAD_PITCH) > 0){
-      triggerIcon = 'app.media.ic_trigger_nod'
-      triggerTips += "请点点头"
-    }
-    if((actionNum & DetectType.ST_MOBILE_BROW_JUMP) > 0){
-      triggerIcon = 'app.media.ic_trigger_frown'
-      triggerTips += "请挑挑眉"
-    }
-    if((actionNum & DetectType.ST_MOBILE_FACE_LIPS_UPWARD) > 0){
-      triggerIcon = 'app.media.ic_trigger_lips_upward'
-      triggerTips += "嘴角上扬"
-    }
-    if((actionNum & DetectType.ST_MOBILE_FACE_LIPS_POUTED) > 0){
-      triggerIcon = 'app.media.ic_trigger_lips_pouted'
-      triggerTips += "请嘟嘴"
-    }
-    if((actionNum & DetectType.ST_HAND_ACTION_TYPE_PALM) > 0){
-      triggerIcon = 'app.media.ic_trigger_palm_selected'
-      triggerTips += "请伸手掌"
-    }
-    if((actionNum & DetectType.ST_HAND_ACTION_TYPE_LOVE) > 0){
-      triggerIcon = 'app.media.ic_trigger_heart_hand_selected'
-      triggerTips += "请爱心手势"
-    }
-    if((actionNum & DetectType.ST_HAND_ACTION_TYPE_HOLDUP) > 0){
-      triggerIcon = 'app.media.ic_trigger_palm_up_selected'
-      triggerTips += "请托个手"
-    }
+  const models = resourceManager.getRawFileListSync(`models`)
+  models.forEach(model => {
+    const subModelPath = writeModelToSandbox(model,'models')
+    const result = libstmobile.addSubModelByPath(subModelPath)
+  })
 
-    if((actionNum & DetectType.ST_HAND_ACTION_TYPE_CONGRATULATE) > 0){
-      triggerIcon = 'app.media.ic_trigger_congratulate_selected'
-      triggerTips += "请抱个拳"
-    }
-    if((actionNum & DetectType.ST_HAND_ACTION_TYPE_FINGER_HEART) > 0){
-      triggerIcon = 'app.media.ic_trigger_finger_heart_selected'
-      triggerTips += "请单手比心"
-    }
-    if((actionNum & DetectType.ST_HAND_ACTION_TYPE_GOOD) > 0){
-      triggerIcon = 'app.media.ic_trigger_thumb_selected'
-      triggerTips += "大拇指"
-    }
-    if((actionNum & DetectType.ST_HAND_ACTION_TYPE_OK) > 0){
-      triggerIcon = 'app.media.ic_trigger_ok_selected'
-      triggerTips += "请亮出OK手势"
-    }
-    if((actionNum & DetectType.ST_HAND_ACTION_TYPE_SCISSOR) > 0){
-      triggerIcon = 'app.media.ic_trigger_scissor_selected'
-      triggerTips += "请比个剪刀手"
-    }
-    if((actionNum & DetectType.ST_HAND_ACTION_TYPE_PISTOL) > 0){
-      triggerIcon = 'app.media.ic_trigger_pistol_selected'
-      triggerTips += "请伸出食指"
-    }
-    if((actionNum & DetectType.ST_HAND_ACTION_TYPE_FINGER_INDEX) > 0){
-      triggerIcon = 'app.media.ic_trigger_one_finger_selected'
-      triggerTips += "请亮出666手势"
-    }
-    if((actionNum & DetectType.ST_HAND_ACTION_TYPE_FIST) > 0){
-      triggerIcon = 'app.media.ic_trigger_first_selected'
-      triggerTips += "请举起拳头"
-    }
-    if((actionNum & DetectType.ST_HAND_ACTION_TYPE_666) > 0){
-      triggerIcon = 'app.media.ic_trigger_sixsixsix_selected'
-      triggerTips += "请亮出666手势"
-    }
-    if((actionNum & DetectType.ST_HAND_ACTION_TYPE_BLESS) > 0){
-      triggerIcon = 'app.media.ic_trigger_handbless_selected'
-      triggerTips += "请双手合十"
-    }
-    if((actionNum & DetectType.ST_HAND_ACTION_TYPE_ILOVEYOU) > 0){
-      triggerIcon = 'app.media.ic_trigger_love_selected'
-      triggerTips += "请亮出我爱你手势"
-    }
-    if(triggerIcon == "") return;
-    promptAction.openCustomDialog({
-      builder: () => {
-        this.customDialogBuilder(triggerIcon,triggerTips)
-      },
-      backgroundColor:Color.Transparent,
-      width:200,
-      height:40,
-      alignment:DialogAlignment.Bottom,
-      offset:{dx:0, dy: -300}
+  const bodyModelPath = writeModelToSandbox('M_SenseME_Body_Contour_77_p_1.5.0.model','models_body')
+  const result = libstmobile.addSubModelByPath(bodyModelPath)
 
-    }).then((dialogId: number) => {
-      this.customDialogComponentId = dialogId
-    })
-    setTimeout(()=>{
-      promptAction.closeCustomDialog(this.customDialogComponentId)
-    },3000)
-  }
+  const aniModels = resourceManager.getRawFileListSync(`aniModels`)
+  aniModels.forEach(model => {
+    const subModelPath = writeModelToSandbox(model,'aniModels')
+    const result = libstmobile.addAnimalSubModelByPath(subModelPath)
+  })
+  const ganModels = resourceManager.getRawFileListSync(`gan_model`)
+  ganModels.forEach(model => {
+    const subModelPath = writeModelToSandbox(model,'gan_model')
+    const result = libstmobile.setBeautyPackageByPath(BeautyType.EFFECT_BEAUTY_BASE_FACE_SMOOTH, subModelPath)
+  })
+  const skinDetailPath = writeModelToSandbox('SDKSkinDetailAssets0924.zip','beauty_materials')
+  libstmobile.setBeautyPackageByPath(BeautyType.EFFECT_RESOURCE_EXTERNAL, skinDetailPath)
+  const beautyPath = writeModelToSandbox('3DMicroPlasticDefault.zip','beauty_materials')
+  libstmobile.setBeautyPackageByPath(BeautyType.EFFECT_BEAUTY_3D_MICRO_PLASTIC, beautyPath)
+  libstmobile.updateFaceMeshList(MeshType.ST_MOBILE_FACE_MESH)
 
-  //trigger dialog
-  @Builder
-  customDialogBuilder(icon:string, message:string) {
-    Row() {
-      Image($r(icon)).width('64px').height('64px')
-      Blank().width(10)
-      Text(message).fontSize(18).fontColor(Color.White)
-    }
-    .alignItems(VerticalAlign.Center)
-    .backgroundColor(Color.Transparent)
-  }
+  EventBus.emitEvent(EventType.OnModelLoaded)
 }

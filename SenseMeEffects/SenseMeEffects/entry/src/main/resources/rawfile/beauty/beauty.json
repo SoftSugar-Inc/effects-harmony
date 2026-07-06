@@ -1,177 +1,190 @@
 [
-    {
-      "currentStrength": 0.0,
-      "subBeauties": [],
-      "cleanObject": {
-        "name": "美白1",
-        "type": 101,
-        "defaultStrength": 0.0,
-        "mode": 0,
-        "path": "",
-        "defaultIcon": "beauty_whiten_default",
-        "highlightIcon": "beauty_whiten_highlight",
-        "need_open_whiten_skin_mask" : false
-      }
-    },
-    {
-        "currentStrength": 0.0,
-        "subBeauties": [
-            {
-                "currentStrength": 0.0,
-                "subBeauties": [],
-                "cleanObject": {
-                  "name": "美白2",
-                  "type": -2,
-                  "defaultStrength": 0.0,
-                  "mode" : 0,
-                  "path" : "",
-                  "defaultIcon" : "beauty_back",
-                  "highlightIcon" : "beauty_back"
-                }
-            },
-            {
-                "currentStrength": 0.0,
-                "subBeauties": [],
-                "cleanObject": {
-                  "name": "自然美白",
-                  "type": 101,
-                  "defaultStrength": 0.0,
-                  "mode" : 0,
-                  "path" : "whiten_gif.zip",
-                  "defaultIcon" : "beauty_whiten_default",
-                  "highlightIcon" : "beauty_whiten_highlight"
-                }
-            },
-            {
-                "currentStrength": 0.0,
-                "subBeauties": [],
-                "cleanObject": {
-                  "name": "粉嫩美白",
-                  "type": 101,
-                  "defaultStrength": 0.0,
-                  "mode" : 0,
-                  "path" : "whiten_pink.zip",
-                  "defaultIcon" : "beauty_whiten_default",
-                  "highlightIcon" : "beauty_whiten_highlight"
-                }
-            },
-            {
-                "currentStrength": 0.0,
-                "subBeauties": [],
-                "cleanObject": {
-                  "name": "美黑",
-                  "type": 101,
-                  "defaultStrength": 0.0,
-                  "mode" : 0,
-                  "path" : "whiten_black.zip",
-                  "defaultIcon" : "beauty_whiten_default",
-                  "highlightIcon" : "beauty_whiten_highlight"
-                }
-            }
-        ],
-        "cleanObject": {
-          "name": "美白2",
-          "type": 101,
-          "defaultStrength": 0.0,
-          "mode" : 0,
-          "path" : "",
-          "defaultIcon" : "beauty_whiten_default",
-          "highlightIcon" : "beauty_whiten_highlight",
-          "need_open_whiten_skin_mask" : false
-        }
-    },
-    {
-        "currentStrength": 0,
-        "subBeauties": [],
-        "cleanObject": {
-          "name": "美白3",
-          "type": 101,
-          "defaultStrength": 0,
-          "mode" : 2,
-          "path" : "",
-          "defaultIcon" : "beauty_whiten_default",
-          "highlightIcon" : "beauty_whiten_highlight",
-          "need_open_whiten_skin_mask" : true
-        }
-    },
-    {
-    "currentStrength": 0,
-    "subBeauties": [],
-    "cleanObject": {
-      "name": "美白4",
-      "type": 101,
-      "defaultStrength": 0.3,
-      "mode" : 0,
-      "path" : "whiten4.zip",
-      "defaultIcon" : "beauty_whiten_default",
-      "highlightIcon" : "beauty_whiten_highlight",
-      "need_open_whiten_skin_mask" : true
-       }
-    },
-    {
-        "currentStrength": 0,
-        "subBeauties": [],
-        "cleanObject": {
-          "name": "红润",
-          "type": 102,
-          "defaultStrength": 0,
-          "mode" : 0,
-          "path" : "",
-          "defaultIcon" : "beauty_redden_default",
-          "highlightIcon" : "beauty_redden_highlight"
-        }
-    },
-    {
-        "currentStrength": 0.0,
-        "subBeauties": [],
-        "cleanObject": {
-          "name": "磨皮1",
-            "type": 103,
-          "defaultStrength": 0.0,
-          "mode" : 1,
-          "path" : "",
-          "defaultIcon" : "beauty_smooth_default",
-          "highlightIcon" : "beauty_smooth_highlight"
-        }
-    },
-    {
-        "currentStrength": 0.6,
-        "subBeauties": [],
-        "cleanObject": {
-          "name": "磨皮2",
-          "type": 103,
-          "defaultStrength": 0,
-          "mode" : 2,
-          "path" : "",
-          "defaultIcon" : "beauty_smooth_default",
-          "highlightIcon" : "beauty_smooth_highlight"
-        }
-    },
-    {
-        "currentStrength": 0.0,
-        "subBeauties": [],
-        "cleanObject": {
-          "name": "磨皮3",
-          "type": 103,
-          "defaultStrength": 0.5,
-          "mode" : 3,
-          "path" : "",
-          "defaultIcon" : "beauty_smooth_default",
-          "highlightIcon" : "beauty_smooth_highlight"
-        }
-    },
   {
-    "currentStrength": 0.0,
-    "subBeauties": [],
-    "cleanObject": {
-      "name": "磨皮4",
-      "type": 103,
-      "defaultStrength": 0.0,
-      "mode" : 4,
-      "path" : "",
-      "defaultIcon" : "beauty_smooth_default",
-      "highlightIcon" : "beauty_smooth_highlight"
-    }
+    "uid": "whiten1",
+    "des": "美白1",
+    "display_des_res_id": "basic_whiten1",
+    "beauty_type": 101,
+    "select_icon_nor_res": "beauty_whiten_unselected",
+    "select_icon_press_res": "beauty_whiten_selected",
+    "def_strength": 0,
+    "skip_set_when_reset": true,
+    "mutex_other_uid_arr": ["whiten3", "whiten4", "whiten2_nature", "whiten2_pink", "whiten2_black"],
+    "beauty_mode_param": 101,
+    "beauty_mode_value": 0,
+    "beauty_asset_path": null,
+    "need_open_whiten_skin_mask": false,
+    "same_beauty_type_multi_mode": true
+  },
+  {
+    "uid": "whiten2",
+    "des": "美白2",
+    "display_des_res_id": "basic_whiten2",
+    "beauty_type": 101,
+    "select_icon_nor_res": "beauty_whiten_unselected",
+    "select_icon_press_res": "beauty_whiten_selected",
+    "def_strength": 0,
+    "mutex_other_uid_arr": ["whiten3", "whiten4"],
+    "no_seekbar": true,
+    "click_goto_enum_num": "TYPE_BASIC_2",
+    "same_beauty_type_multi_mode": true,
+    "sub_beauties": [
+      {
+        "uid": "whiten2_back_button",
+        "des": "返回",
+        "display_des_res_id": "basic_whiten2",
+        "beauty_type": -2,
+        "select_icon_nor_res": "ic_camera_hight_face_back",
+        "select_icon_press_res": "ic_camera_hight_face_back",
+        "def_strength": 0,
+        "click_goto_enum_num": "TYPE_BASE",
+        "no_seekbar": true
+      },
+      {
+        "uid": "whiten2_nature",
+        "des": "美白2-自然",
+        "display_des_res_id": "basic_whiten_nature",
+        "beauty_type": 101,
+        "select_icon_nor_res": "beauty_whiten_unselected",
+        "select_icon_press_res": "beauty_whiten_selected",
+        "mutex_other_uid_arr": ["whiten1", "whiten2", "whiten3", "whiten4", "whiten2_pink", "whiten2_black"],
+        "def_strength": 0,
+        "need_open_whiten_skin_mask": false,
+        "skip_set_when_reset": true,
+        "beauty_asset_path": "beauty_materials/whiten_gif.zip",
+        "same_beauty_type_multi_mode": true
+      },
+      {
+        "uid": "whiten2_pink",
+        "des": "美白2-粉嫩",
+        "display_des_res_id": "basic_whiten_pink",
+        "beauty_type": 101,
+        "mutex_other_uid_arr": ["whiten1", "whiten2", "whiten3", "whiten4", "whiten2_nature", "whiten2_black"],
+        "select_icon_nor_res": "beauty_whiten_unselected",
+        "select_icon_press_res": "beauty_whiten_selected",
+        "def_strength": 0,
+        "need_open_whiten_skin_mask": false,
+        "skip_set_when_reset": true,
+        "beauty_asset_path": "beauty_materials/whiten_pink.zip",
+        "same_beauty_type_multi_mode": true
+      },
+      {
+        "uid": "whiten2_black",
+        "des": "美白2-美黑",
+        "display_des_res_id": "basic_whiten_black",
+        "beauty_type": 101,
+        "mutex_other_uid_arr": ["whiten1", "whiten2", "whiten3", "whiten4", "whiten2_nature", "whiten2_pink"],
+        "select_icon_nor_res": "beauty_whiten_unselected",
+        "select_icon_press_res": "beauty_whiten_selected",
+        "def_strength": 0,
+        "skip_set_when_reset": true,
+        "need_open_whiten_skin_mask": false,
+        "beauty_asset_path": "beauty_materials/whiten_black.zip",
+        "same_beauty_type_multi_mode": true
+      }
+    ]
+  },
+  {
+    "uid": "whiten3",
+    "des": "美白3",
+    "display_des_res_id": "basic_whiten3",
+    "beauty_type": 101,
+    "select_icon_nor_res": "beauty_whiten_unselected",
+    "select_icon_press_res": "beauty_whiten_selected",
+    "def_strength": 0,
+    "skip_set_when_reset": true,
+    "mutex_other_uid_arr": ["whiten1", "whiten2", "whiten4", "whiten2_nature", "whiten2_pink", "whiten2_black"],
+    "beauty_mode_param": 101,
+    "beauty_mode_value": 2,
+    "need_open_whiten_skin_mask": true,
+    "same_beauty_type_multi_mode": true
+  },
+  {
+    "uid": "whiten4",
+    "des": "美白4",
+    "display_des_res_id": "basic_whiten4",
+    "beauty_type": 101,
+    "select_icon_nor_res": "beauty_whiten_unselected",
+    "select_icon_press_res": "beauty_whiten_selected",
+    "def_strength": 0.3,
+    "mutex_other_uid_arr": ["whiten1", "whiten2_nature", "whiten2_pink", "whiten2_black", "whiten3"],
+    "need_open_whiten_skin_mask": true,
+    "beauty_asset_path": "beauty_materials/whiten4.zip",
+    "same_beauty_type_multi_mode": true
+  },
+  {
+    "uid": "redden",
+    "des": "红润",
+    "display_des_res_id": "basic_redden",
+    "beauty_type": 102,
+    "select_icon_nor_res": "beauty_redden_unselected",
+    "select_icon_press_res": "beauty_redden_selected",
+    "def_strength": 0
+  },
+  {
+    "uid": "smooth1",
+    "des": "磨皮1",
+    "display_des_res_id": "basic_smooth1",
+    "beauty_type": 103,
+    "skip_set_when_reset": true,
+    "mutex_other_uid_arr":["smooth2", "smooth3", "smooth4", "full_body_smooth", "gan_skin"],
+    "beauty_mode_param": 103,
+    "beauty_mode_value": 1,
+    "select_icon_nor_res": "beauty_smooth_unselected",
+    "select_icon_press_res": "beauty_smooth_selected",
+    "def_strength": 0,
+    "same_beauty_type_multi_mode": true
+  },
+  {
+    "uid": "smooth2",
+    "des": "磨皮2",
+    "display_des_res_id": "basic_smooth2",
+    "beauty_type": 103,
+    "skip_set_when_reset": true,
+    "beauty_mode_param": 103,
+    "beauty_mode_value": 2,
+    "mutex_other_uid_arr":["smooth1", "smooth3", "smooth4", "gan_skin"],
+    "select_icon_nor_res": "beauty_smooth_unselected",
+    "select_icon_press_res": "beauty_smooth_selected",
+    "def_strength": 0,
+    "same_beauty_type_multi_mode": true
+  },
+  {
+    "uid": "smooth3",
+    "des": "磨皮3",
+    "display_des_res_id": "basic_smooth3",
+    "beauty_type": 103,
+    "beauty_mode_param": 103,
+    "beauty_mode_value": 3,
+    "select_icon_nor_res": "beauty_smooth_unselected",
+    "select_icon_press_res": "beauty_smooth_selected",
+    "current_use": true,
+    "def_strength": 0,
+    "mutex_other_uid_arr":["smooth1", "smooth2", "smooth4", "gan_skin"],
+    "same_beauty_type_multi_mode": true
+  },
+  {
+    "uid": "smooth4",
+    "des": "磨皮4",
+    "display_des_res_id": "basic_smooth4",
+    "beauty_type": 103,
+    "beauty_mode_param": 103,
+    "beauty_mode_value": 4,
+    "select_icon_nor_res": "beauty_smooth_unselected",
+    "select_icon_press_res": "beauty_smooth_selected",
+    "def_strength": 0.5,
+    "mutex_other_uid_arr":["smooth1", "smooth2", "smooth3", "gan_skin"],
+    "same_beauty_type_multi_mode": true
+  },
+  {
+    "uid": "full_body_smooth",
+    "des": "全身磨皮",
+    "display_des_res_id": "str_full_body",
+    "beauty_type": 104,
+    "select_icon_nor_res": "icon_beauty_base_skin_smooth_unselected",
+    "select_icon_press_res": "icon_beauty_base_skin_smooth_selected",
+    "def_strength": 0,
+    "mutex_other_uid_arr":["smooth1", "gan_skin"],
+    "beauty_mode_param": 103,
+    "beauty_mode_value": 2
   }
 ]
-

@@ -1,0 +1,48 @@
+[
+  {
+    "des": "瘦脸",
+    "uid": "effect_beauty_reshape_shrink_face",
+    "display_des_res_id": "reshape_shrink_face",
+    "beauty_type": 201,
+    "select_icon_nor_res": "beauty_shrink_face_unselected",
+    "select_icon_press_res": "beauty_shrink_face_selected",
+    "def_strength": 0.05
+  },
+  {
+    "des": "大眼",
+    "uid": "effect_beauty_reshape_enlarge_eye",
+    "display_des_res_id": "reshape_enlarge_eye",
+    "beauty_type": 202,
+    "select_icon_nor_res": "beauty_enlargeeye_unselected",
+    "select_icon_press_res": "beauty_enlargeeye_selected",
+    "def_strength": 0.2
+  },
+  {
+    "des": "小脸",
+    "uid": "effect_beauty_reshape_shrink_jaw",
+    "display_des_res_id": "reshape_shrink_jaw",
+    "beauty_type": 203,
+    "select_icon_nor_res": "beauty_small_face_unselected",
+    "select_icon_press_res": "beauty_small_face_selected",
+    "def_strength": 0.2,
+    "defaultStrengths":[0.2,0.2,0.2,0.5,0.5]
+  },
+  {
+    "des": "窄脸",
+    "uid": "effect_beauty_reshape_narrow_face",
+    "display_des_res_id": "reshape_narrow_face",
+    "beauty_type": 204,
+    "select_icon_nor_res": "beauty_narrow_face_unselected",
+    "select_icon_press_res": "beauty_narrow_face_selected",
+    "def_strength": 0
+  },
+  {
+    "des": "圆眼",
+    "uid": "effect_beauty_reshape_round_eye",
+    "display_des_res_id": "reshape_round_eye",
+    "beauty_type": 205,
+    "select_icon_nor_res": "beauty_round_eye_unselected",
+    "select_icon_press_res": "beauty_round_eye_selected",
+    "def_strength": 0.3
+  }
+]

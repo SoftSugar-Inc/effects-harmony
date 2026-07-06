@@ -49,7 +49,12 @@ typedef enum R_STATE {
     RECORDER_PLAYINT = 2,
     RECORDER_STOP = 3,
     RECORDER_COMPLETE = 4,
+    RECORDER_ERROR = 5,
+    RECORDER_ENCODING = 6,
 } R_STATE;
 
+
+// 录制状态回调函数类型定义
+typedef void (*RecordStateCallback)(int state);
 
 #endif //EFFECTSHARMONY_COMMON_H

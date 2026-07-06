@@ -1,32 +1,33 @@
 {
   "apiType": "stageMode",
   "buildOption": {
-    "externalNativeOptions": {
-      "path": "./src/main/cpp/CMakeLists.txt",
-      "arguments": "",
-      "cppFlags": ""
+    "sourceOption": {
+      "workers": [
+        './src/main/ets/workers/CameraWorker.ets'
+      ]
     }
   },
   "buildOptionSet": [
-   /* {
-      "name": "release",
+    {
+      "name": "debug",
+      "debuggable": true,
       "arkOptions": {
         "obfuscation": {
           "ruleOptions": {
-            "enable": true,
+            "enable": false,
             "files": [
-              "./obfuscation-rules.txt"
             ]
           }
         }
-      }*//*,
-      "nativeLib": {
-        "debugSymbol": {
-          "strip": true,
-          "exclude": []
-        }
-      }*//*
-    },*/
+      }
+      /*,
+            "nativeLib": {
+              "debugSymbol": {
+                "strip": true,
+                "exclude": []
+              }
+            }*/
+    },
   ],
   "targets": [
     {

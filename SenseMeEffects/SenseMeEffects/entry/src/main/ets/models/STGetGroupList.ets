@@ -1,5 +1,5 @@
 import { STHttpManager } from '../networking/STHttpManager'
-import { LightWeightMap } from '@kit.ArkTS';
+import {  LightWeightMap } from '@kit.ArkTS';
 import { STResponse } from '../networking/STResponse';
 import { STCrypto } from '../common/STCrypto';
 import { STSdk } from '../networking/STSdk';
@@ -8,8 +8,10 @@ import { STGroupResult } from './Sticker/STGroupResult'
 import { STAuthorizeData } from '../networking/STAuthorizeData';
 import { STEffectModel } from './Sticker/STEffectModel';
 import { Callback } from '@ohos.base';
-import http from '@ohos.net.http';
+import crypto from '@ohos.security.cryptoFramework';
 
+const APPID = "e22024c218fd48638ca9d85514c36e66"
+//e22024c218fd48638ca9d85514c36e66
 const appkey = "c930320e4806494a817e5bb80278defc"
 const ivKey = "5e8y6w45ju8w9jq8"
 
@@ -19,7 +21,7 @@ export class STGetGroupList {
 
   Authorize(completion: Callback<boolean>) {
     let parameters = new LightWeightMap<string, string>()
-    parameters.set("appId", "e22024c218fd48638ca9d85514c36e66")
+    parameters.set("appId", APPID)
     parameters.set("timestamp", "1651135307220")
     parameters.set("sdkVersion", "300")
     parameters.set("appVersion", "3.1.3")
@@ -56,7 +58,7 @@ export class STGetGroupList {
 
   async AuthorizeSync(): Promise<boolean> {
     let parameters = new LightWeightMap<string, string>()
-    parameters.set("appId", "e22024c218fd48638ca9d85514c36e66")
+    parameters.set("appId", APPID)
     parameters.set("timestamp", "1651135307220")
     parameters.set("sdkVersion", "300")
     parameters.set("appVersion", "3.1.3")
@@ -89,7 +91,7 @@ export class STGetGroupList {
 
   async fetchGroupList(groupId: number, completion?: Callback<STEffectModel[]>) {
     let parameters = new LightWeightMap<string, string>()
-    parameters.set("appId", "e22024c218fd48638ca9d85514c36e66")
+    parameters.set("appId", APPID)
     parameters.set("timestamp", Date.now().toString())
     parameters.set("sdkVersion", "xxx")
     parameters.set("appVersion", "xxx")
@@ -108,7 +110,7 @@ export class STGetGroupList {
       if (completion) {
         let models = jsonResponse?.data?.effects as STEffectModel[]
         let rets = Array.from<STEffectModel, STEffectModel>(models, (effect) => {
-          return new STEffectModel(effect.name, effect.thumbnail, effect.pkgUrl)
+          return new STEffectModel(effect.name, effect.thumbnail, effect.pkgUrl, effect.id)
         })
         completion(rets)
       }
@@ -122,7 +124,7 @@ export class STGetGroupList {
 
   async fetchGroupListSync(groupId: number): Promise<STEffectModel[]> {
     let parameters = new LightWeightMap<string, string>()
-    parameters.set("appId", "e22024c218fd48638ca9d85514c36e66")
+    parameters.set("appId", APPID)
     parameters.set("timestamp", Date.now().toString())
     parameters.set("sdkVersion", "xxx")
     parameters.set("appVersion", "xxx")
@@ -142,8 +144,29 @@ export class STGetGroupList {
     let jsonResponse: STResponse<STGroupResult> | undefined = JSON.parse(response.result as string)
     let models = jsonResponse?.data?.effects as STEffectModel[]
     let rets = Array.from<STEffectModel, STEffectModel>(models, (effect) => {
-      return new STEffectModel(effect.name, effect.thumbnail, effect.pkgUrl)
+      return new STEffectModel(effect.name, effect.thumbnail, effect.pkgUrl, effect.id)
     })
     return rets
+  }
+
+  Body_APP_ID = "631D9D94511DDD3F792A70590FCF7391";
+  Body_APP_KEY = "F77EB9C9B6598563FE1EAFB859339115";
+  async getBodyBeautyMaterial(base64Image:string, materialType: number): Promise<string>{
+    let timestr = (Date.now()/1000).toFixed(0).toString()
+    let signString = this.Body_APP_ID + timestr + this.Body_APP_KEY;
+    let signStr = await STCrypto.doMd(signString)
+    let jsonObj: Record<string, string|number> = {
+      "appId": this.Body_APP_ID,
+      'timestamp': timestr,
+      'sign': signStr,
+      'grantType': "sign",
+      'flag': materialType,
+      'image': base64Image,
+    }
+    let response =
+      await STHttpManager.fetchBodyMaterial("https://aigc.softsugar.com/process_bodybeautify_image", JSON.stringify(jsonObj)
+        )
+
+    return response.result as string
   }
 }

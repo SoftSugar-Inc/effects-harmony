@@ -79,4 +79,21 @@ export class STHttpManager {
     httpRequest.destroy()
     return response
   }
+
+  static async fetchBodyMaterial(url:string,
+    params : string,
+    ) : Promise<http.HttpResponse>{
+    let httpRequest = http.createHttp()
+    console.log('~~~~~~~~~~' + params)
+    let response = await httpRequest.request(url, {
+      method: http.RequestMethod.POST,
+      header: {
+        'Content-Type': "application/json; charset=utf-8"
+      },
+      expectDataType: http.HttpDataType.STRING,
+      extraData:params
+    })
+    httpRequest.destroy()
+    return response
+  }
 }

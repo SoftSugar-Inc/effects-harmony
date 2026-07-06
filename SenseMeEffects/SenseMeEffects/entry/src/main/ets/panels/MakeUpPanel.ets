@@ -5,43 +5,54 @@ import { MakeUpCell } from './MakeUpCell'
 import { STListItem } from '../models/STListItem'
 
 import { ListItemCell, Item } from './ListItemCell'
-import map from '@hms.core.map.map'
-import { Popup } from '@kit.ArkUI'
-
+import DBManager from '../models/DBJson/DBManager'
+import { HomeParam, HomeType } from '../common/STDefines'
+import { PanelState } from './PreviewBottomPanel'
+import { EventBus, EventType } from '../utils/EventBus'
+import libstmobile,{ st_image_t, PixelFormat }  from '@softsugar/mars_effects'
 @Component
 export struct MakeUpPanel {
   @State itemData : STListItem<Item> = new STListItem<Item>()
   @State makeUpModel : STListItem<STEffectModel> = new STListItem<STEffectModel>()
   makeUpModelList : STListItem<STListItem<STEffectModel>> = new STListItem<STListItem<STEffectModel>>()
 
-  //@State makeUpModel : STListItem<STEffectModel> = new STListItem<STEffectModel>()
-
   @State selectItem : Item | undefined = undefined
   @State selectItemIndex : number = 0
 
   @State selectMakeUpMap : Map<number, STEffectModel> = new Map()
-
   @State strengthMap : Map<number, number> = new Map()
 
-  /**
-   * callback
-   */
-  didSelectedMaterial?:(path:STEffectModel) => void
-  didDeselectedMaterial?:(type: number) => void
-  //onMakeUpClose?:(close:boolean) => void
-  onMakeUpStrengthChanged?: (type: number, strength : number) => void
+  @Prop panelState: PanelState
 
-  onResetOrClear?: (makeUps: STEffectModel[]) => void
+  private overLapMap: Map<number, STEffectModel> = new Map()
+
+
+  didSelectedMaterial = (type:number,path:string) => {
+    const result = libstmobile.setBeautyPackageByPath(type, path)
+    EventBus.emitProcess()
+  }
+  didDeselectedMaterial = (type: number) => {
+    const result = libstmobile.setBeautyPackageByPath(type, "")
+    EventBus.emitProcess()
+  }
+  onMakeUpStrengthChanged = (type: number, strength : number) => {
+    //染发系数
+    if(type == 401){
+      strength *= 0.22
+    }
+    const result = libstmobile.setBeautyStrength(type, strength / 100.0)
+    EventBus.emitProcess()
+
+  }
 
   private manager = STMaterialManager.GetInstance()
   private listScroller = new ListScroller()
   private itemListScroller = new ListScroller()
 
  aboutToDisappear(): void {
-    this.didSelectedMaterial = undefined
-   this.didDeselectedMaterial = undefined
-   this.onMakeUpStrengthChanged = undefined
-   this.onResetOrClear = undefined
+   EventBus.unListenEvent(EventType.OnModelLoaded)
+   EventBus.unListenEvent(EventType.SetOverLapMakeup)
+   EventBus.unListenEvent(EventType.ReSetOverLapMakeup)
  }
   aboutToAppear(): void {
     this.selectMakeUpMap.forEach((model)=>{
@@ -65,8 +76,51 @@ export struct MakeUpPanel {
         })
     }
 
+    EventBus.listenEvent(EventType.OnModelLoaded,()=>{
+      if (globalThis.homeParam && globalThis.homeParam.type == HomeType.Makeup){
+        this.itemListScroller.scrollTo(globalThis.homeParam.index)
+        this.updateItems(globalThis.homeParam.index)
+      }
+      else {
+        this.updateItems(0)
+      }
+      if (this.panelState == PanelState.Preview)
+      {
+          let makeups = DBManager.Instance().getMakeups()
+          makeups.forEach((element) => {
+            if(!element) return
+            let model =  this.makeUpModelList.getData(element.selectParentIndex).getData(element.selectIndex)
+            model.selected = true
+            this.selectMakeUpMap.set(element.selectParentIndex,model)
+            this.didSelectedMaterial?.(element.type, element.makeupPath)
 
-    this.updateItems(0)
+            this.strengthMap.set(element.selectParentIndex, element.makeupStrength)
+            this.onMakeUpStrengthChanged?.(element.type, element.makeupStrength)
+          });
+      }
+    })
+
+    EventBus.listenEvent(EventType.SetOverLapMakeup,(message)=>{
+      if (message.data&&message.data['type']) {
+        let type = message.data['type'] as number
+
+        this.selectMakeUpMap.forEach((value,key)=>{
+          if (value.type == type) {
+            value.selected = false
+            this.overLapMap.set(key, value)
+            this.selectMakeUpMap.delete(key)
+          }
+        })
+      }
+    })
+    EventBus.listenEvent(EventType.ReSetOverLapMakeup,()=>{
+        this.overLapMap.forEach((value,key)=>{
+          value.selected = true
+          this.selectMakeUpMap.set(key, value)
+        })
+      this.overLapMap.clear()
+    })
+
   }
 
   updateCell(index : number){
@@ -80,11 +134,17 @@ export struct MakeUpPanel {
     curItem.selected = !curItem.selected
     if (curItem.selected){
       this.selectMakeUpMap.set(this.selectItemIndex,  curItem)
+      if (this.overLapMap.has(this.selectItemIndex)){
+        this.overLapMap.delete(this.selectItemIndex)
+      }
 
       if (curItem.pkgLocalPath){
         if (this.didSelectedMaterial) {
-          this.didSelectedMaterial(curItem)
+          this.didSelectedMaterial(curItem.type, curItem.pkgLocalPath)
           this.onMakeUpStrengthChanged?.(curItem.type, this.strengthMap.get(this.selectItemIndex)!)
+          if (this.panelState == PanelState.Preview) {
+            DBManager.Instance().updateMakeup(curItem.type,this.selectItemIndex, index, curItem.pkgLocalPath, this.strengthMap.get(this.selectItemIndex)!)
+          }
         }
         return
       }
@@ -96,8 +156,11 @@ export struct MakeUpPanel {
         curItem.pkgLocalPath = filePath
         curItem.state = CellState.Downloaded
         if (curItem.selected && this.didSelectedMaterial) {
-          this.didSelectedMaterial(curItem)
+          this.didSelectedMaterial(curItem.type, curItem.pkgLocalPath)
           this.onMakeUpStrengthChanged?.(curItem.type, this.strengthMap.get(this.selectItemIndex)!)
+          if (this.panelState == PanelState.Preview) {
+            DBManager.Instance().updateMakeup(curItem.type,this.selectItemIndex, index, curItem.pkgLocalPath, this.strengthMap.get(this.selectItemIndex)!)
+          }
         }
       }, (message) =>{
         curItem.state = CellState.NeedDonwload
@@ -108,6 +171,10 @@ export struct MakeUpPanel {
       if (curItem.downloaded) {
         if (this.didDeselectedMaterial) {
           this.didDeselectedMaterial(curItem.type)
+
+          if (this.panelState == PanelState.Preview) {
+            DBManager.Instance().deleteMakeup(curItem.type)
+          }
         }
       }
     }
@@ -152,6 +219,10 @@ export struct MakeUpPanel {
     this.strengthMap.forEach((v,k)=>{
       this.strengthMap.set(k,80)
     })
+
+    if (this.panelState == PanelState.Preview) {
+      DBManager.Instance().deleteAllMakeup()
+    }
   }
   build() {
     Column() {
@@ -163,7 +234,8 @@ export struct MakeUpPanel {
       }
       .fontSize(14)
       .fontColor(Color.White)
-      .position({ y:-10, x:`${(this.strengthMap.get(this.selectItemIndex)??0)*0.6 + 20 - ((this.strengthMap.get(this.selectItemIndex)??0-50)/100) * 4}%`}) //滑块offset
+      .textAlign(TextAlign.Center)
+      .position({ y:-10, x:`${(this.strengthMap.get(this.selectItemIndex)??0)*0.6 + 20 }%`}) //滑块offset
       .backgroundColor('#00000000')
       .markAnchor({x:'50%'})
       .visibility(this.selectMakeUpMap.get(this.selectItemIndex) ? Visibility.Visible : Visibility.Hidden)
@@ -175,15 +247,18 @@ export struct MakeUpPanel {
         style: SliderStyle.OutSet
       })
         .visibility(this.selectMakeUpMap.get(this.selectItemIndex) ? Visibility.Visible : Visibility.Hidden)
-        .width('100%')
+        .width('64%')
         .showTips(false)
         .showSteps(true)
-        .padding({ left: '20%', right: '20%' })
         .onChange((value: number, mode: SliderChangeMode) => {
           let curEffectModel = this.selectMakeUpMap.get(this.selectItemIndex)
           if(curEffectModel != undefined){
             this.strengthMap.set(this.selectItemIndex, value)
             this.onMakeUpStrengthChanged?.(curEffectModel.type, value)
+
+            if (this.panelState == PanelState.Preview) {
+              DBManager.Instance().updateMakeupStrength(curEffectModel.type, value)
+            }
           }
         })
 
@@ -292,6 +367,9 @@ export struct MakeUpPanel {
               model.selected = false
               this.selectMakeUpMap.delete(this.selectItemIndex)
               this.didDeselectedMaterial?.(this.selectItem?.content.type!)
+              if (this.panelState == PanelState.Preview) {
+                DBManager.Instance().deleteMakeup(this.selectItem?.content.type!)
+              }
             }
           })
         if(this.selectMakeUpMap.get(this.selectItemIndex) == undefined){

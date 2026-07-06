@@ -2,32 +2,29 @@ import { display, router } from '@kit.ArkUI';
 import { FilterPanel } from '../panels/FilterPanel'
 import fs from '@ohos.file.fs';
 import { image } from '@kit.ImageKit'
-import { STPlayer, ICallBack, IFrameCallBack, PlayerState} from '@ohos/stplayer'
-import { Permissions, common } from '@kit.AbilityKit'
-import PermissionManager from "../utils/Permission"
-import libstmobile, { EffectsMode, PixelFormat, RotateType,BeautyParamType } from 'libentry.so'
+import { PlayerState} from 'stplayer'
+import { Permissions, common, sendableContextManager } from '@kit.AbilityKit'
+import libstmobile, { EffectsMode, RenderingResizingMode, MeshType, } from '@softsugar/mars_effects'
 
-import {BeautyType} from 'libentry.so'
+import {BeautyType} from '@softsugar/mars_effects'
 import { CommonConstant as Common } from '../common/CommonConstant';
-import FilterObject from '../models/FilterObject'
-import photoAccessHelper from '@ohos.file.photoAccessHelper'
 import { promptAction } from '@kit.ArkUI'
 import { BusinessError } from '@kit.BasicServicesKit'
-import {STRecorder} from '@ohos/stplayer'
-import { PreviewBottomPanel } from '../panels/PreviewBottomPanel';
-import XComponentContext from '../interface/XComponentContext'
+import { PanelState, PreviewBottomPanel } from '../panels/PreviewBottomPanel';
 import { BeautyPanel } from '../panels/BeautyPanel'
-import BeautyObject from '../models/Beauty/BeautyObject';
 import BeautyResourceManager from '../models/Beauty/BeautyResourceManager';
 import { StickerPanel } from '../panels/StickerPanel';
 import { MakeUpPanel } from '../panels/MakeUpPanel';
-import { STEffectModel } from '../models/Sticker/STEffectModel';
-import { RenderingResizingMode } from 'libentry.so/Index';
+import { EventBus, EventType } from '../utils/EventBus';
+import { STCustomEvent } from '../models/native_js_object/DetectType';
+import { MessageEvents, taskpool, worker } from '@kit.ArkTS';
+import { singletonContext } from '../utils/SingletonContext';
+import { LoadingView } from '../utils/LoadingView';
 
-const PERMISSIONS: Array<Permissions> = [
-  'ohos.permission.READ_MEDIA',
-  'ohos.permission.WRITE_MEDIA',
-]
+import { CameraData, PageMode } from '../workers/CameraData';
+import { ViewData } from '../workers/ViewData';
+import { Singleton } from '../workers/Singleton';
+
 
 const context = getContext() as common.UIAbilityContext
 const resourceManager = context.resourceManager
@@ -43,20 +40,7 @@ const decodingOptions: image.DecodingOptions = {
 struct VideoPage {
   @State imagePixelMap?: PixelMap = undefined
   @State uri: string = (router.getParams() as Map<string, string>)['uri']
-  private start = Date.now()
-  private originalDecodedPixelBuffer: ArrayBuffer | undefined
-  private outputArrayBuffer: ArrayBuffer = new ArrayBuffer(1024)
-  private pixelBufferWidth: number = 0
-  private pixelBufferHeight: number = 0
-  private pixelBufferRotate: number = 0
-  private curWidth : number = 0
-  private curHeight : number = 0
-  private  curStride:number = 0
 
-  private bStartRecord: boolean = false
-  private cnt = 0
-  private lastTime = 0
-  private xComponentContext: XComponentContext | undefined = undefined
   private xcomponentController: XComponentController = new XComponentController()
   @State photoAspectRatio: number = 1080.0 / 1920.0
   @State playerState : PlayerState = PlayerState.PLAYER_PLAYING
@@ -65,13 +49,13 @@ struct VideoPage {
   @State stickerVisiabilty : boolean = false
   @State makeUpVisiabilty : boolean = false
   @State bottomViewVisiablity : boolean = true
-  @State timerVisibility: Visibility = Visibility.Hidden
-  textTimerController: TextTimerController = new TextTimerController();
-  @State format: string = 'mm:ss';
   private comparing: boolean = false
-  private humanActionHandle: ArrayBuffer | undefined
+  loadingView: LoadingView = new LoadingView();
 
-  @State subDataSource: BeautyObject[] | undefined = undefined
+  private cameraData = new CameraData()
+  private cameraWorker : worker.ThreadWorker = new worker.ThreadWorker('entry/ets/workers/CameraWorker',{
+    priority: 0  // 设置为高优先级
+  });
 
   build() {
     Stack() {
@@ -101,15 +85,13 @@ struct VideoPage {
               .margin({ right: 30 })
               .onClick(() => {
                 if (this.playerState == PlayerState.PLAYER_STOP || this.playerState == PlayerState.PLAYER_NODE) { //none|stop
-                  this.preparePlayerSource()
+                  this.initByWorker()
                 } else if (this.playerState == PlayerState.PLAYER_PLAYING) { //playing
-                  STPlayer.pausePlay()
+                  this.changeVideoStateByWorker(PlayerState.PLAYER_PAUSE)
                 } else if (this.playerState == PlayerState.PLAYER_PAUSE) { //pause
-                  STPlayer.resumePlay()
+                  this.changeVideoStateByWorker(PlayerState.PLAYER_PLAYING)
                 }
               })
-
-
             Image($r('app.media.photo_save'))
               .focusable(true)
               .focusOnTouch(true)
@@ -120,7 +102,8 @@ struct VideoPage {
                 if(this.playerState != PlayerState.PLAYER_STOP) { //playing
                   promptAction.showToast({ message: '请等待视频播放完成', duration: 1000 })
                 } else{
-                  this.saveVideo()
+                  this.cameraData.type = 'saveRecordVideo'
+                  this.cameraWorker.postMessage(this.cameraData)
                 }
               })
           }
@@ -136,7 +119,6 @@ struct VideoPage {
               controller: this.xcomponentController
             })
               .onLoad((xComponentContext) => {
-                this.xComponentContext = xComponentContext as XComponentContext;
                 this.onXcomponentLoad()
               })
               //.aspectRatio(this.photoAspectRatio)
@@ -145,6 +127,11 @@ struct VideoPage {
         .width('100%')
         .height('100%')
         .backgroundColor(Color.Black)
+        .priorityGesture(
+          TapGesture({ count: 2 })
+            .onAction(() => {
+              this.changeCustomEvent(true)
+            }))
       }
       .onClick(()=>{
         this.stickerVisiabilty = false;
@@ -152,6 +139,10 @@ struct VideoPage {
         this.filterPanelVisibility = false;
         this.beautyPanelVisibility = false;
         this.bottomViewVisiablity = true;
+
+        this.changeCustomEvent(false)
+
+        EventBus.emitEvent(EventType.OnXComponentClick)
       })
       .height('100%')
       .width('100%')
@@ -173,74 +164,28 @@ struct VideoPage {
               this.bottomViewVisiablity = !this.beautyPanelVisibility
             }
           },
-          type: 0
+          panelState: 0,
         })
           .width('100%')
-          .height(120)
+          .height(264)
           .visibility(this.bottomViewVisiablity ? Visibility.Visible : Visibility.Hidden)
 
         StickerPanel({
-          didSelectedMaterial: (model) => {
-            const result = libstmobile.changePackageByPath(model.pkgLocalPath)
-            model.packageId = result
-            if (this.playerState != PlayerState.PLAYER_PLAYING)
-              this.processAndRender(this.curWidth, this.curHeight,this.curStride, this.pixelBufferRotate, false)
-          },
-          didDeselectedMaterial: (model) => {
-            const result = libstmobile.removePackage(model.packageId)
-            if (this.playerState != PlayerState.PLAYER_PLAYING)
-              this.processAndRender(this.curWidth, this.curHeight,this.curStride, this.pixelBufferRotate, false)
-          },
-          onClearMaterial: (model) => {
-            if (model) {
-              const result = libstmobile.removePackage(model.packageId)
-              if (this.playerState != PlayerState.PLAYER_PLAYING)
-                this.processAndRender(this.curWidth, this.curHeight,this.curStride, this.pixelBufferRotate, false)
-            }
-          },
+          panelState:PanelState.Video
         })
           .width('100%')
           .height(300)
           .visibility(this.stickerVisiabilty ? Visibility.Visible : Visibility.Hidden)
 
         MakeUpPanel({
-          didSelectedMaterial: (model) => {
-            const result = libstmobile.setBeautyPackageByPath(model.type, model.pkgLocalPath)
-            if (this.playerState != PlayerState.PLAYER_PLAYING)
-              this.processAndRender(this.curWidth, this.curHeight,this.curStride, this.pixelBufferRotate, false)
-          },
-          didDeselectedMaterial: (type) => {
-            const result = libstmobile.setBeautyPackageByPath(type, "")
-            if (this.playerState != PlayerState.PLAYER_PLAYING)
-              this.processAndRender(this.curWidth, this.curHeight,this.curStride, this.pixelBufferRotate, false)
-          },
-          onMakeUpStrengthChanged: (type, strength) => {
-            //染发系数
-            if(type == 401){
-              strength *= 0.22
-            }
-            const result = libstmobile.setBeautyStrength(type, strength / 100.0)
-            if (this.playerState != PlayerState.PLAYER_PLAYING)
-              this.processAndRender(this.curWidth, this.curHeight,this.curStride, this.pixelBufferRotate, false)
-          }
+          panelState: PanelState.Video,
         })
           .width('100%')
           .height(220)
           .visibility(this.makeUpVisiabilty ? Visibility.Visible : Visibility.Hidden)
 
         FilterPanel({
-          onFilterSelectedCallback: () => {
-            if (this.playerState != PlayerState.PLAYER_PLAYING)
-              this.processAndRender(this.curWidth, this.curHeight,this.curStride, this.pixelBufferRotate, false)
-          },
-          onFilterStrengthChangedCallback: () => {
-            if (this.playerState != PlayerState.PLAYER_PLAYING)
-              this.processAndRender(this.curWidth, this.curHeight,this.curStride, this.pixelBufferRotate, false)
-          },
-/*          onFilterCloseCallback: () => {
-            this.filterPanelVisibility = false
-            this.bottomViewVisiablity = !this.filterPanelVisibility
-          }*/
+          panelState: PanelState.Video,
         })
           .height(220)
           .width('100%')
@@ -248,51 +193,9 @@ struct VideoPage {
           .visibility(this.filterPanelVisibility ? Visibility.Visible : Visibility.Hidden)
 
         BeautyPanel({
-        /*  onBeauSelected: (beauty: BeautyObject) => {
-            if (beauty.cleanObject.path.length > 0) {
-              let fileContent = resourceManager.getRawFileContentSync('beauties/' + beauty.cleanObject.path)
-              const buffer = fileContent.buffer.slice(0);
-              libstmobile.setBeautyPackageByBuffer(beauty.cleanObject.type, buffer)
-            }
-            if (beauty.cleanObject.mode > 0) {
-              libstmobile.setBeautyMode(beauty.cleanObject.type, beauty.cleanObject.mode)
-            }
-            libstmobile.setBeautyParam(BeautyParamType.EFFECT_BEAUTY_PARAM_ENABLE_WHITEN_SKIN_MASK, beauty.cleanObject.need_open_whiten_skin_mask?1:0)
-            libstmobile.setBeautyStrength(beauty.cleanObject.type, beauty.currentStrength)
-            if (this.playerState != PlayerState.PLAYER_PLAYING){
-              this.processAndRender(this.curWidth, this.curHeight,this.curStride, this.pixelBufferRotate, false)
-            }
-          },*/
-          onBeautyFirstChanged:(beauty: BeautyObject)=>{
-            if (beauty.cleanObject.path.length > 0) {
-              let fileContent = resourceManager.getRawFileContentSync('beauties/' + beauty.cleanObject.path)
-              const buffer = fileContent.buffer.slice(0);
-              libstmobile.setBeautyPackageByBuffer(beauty.cleanObject.type, buffer)
-            }
-            else {
-              libstmobile.setBeautyPackageByBuffer(beauty.cleanObject.type, null)
-            }
-            libstmobile.setBeautyMode(beauty.cleanObject.type, beauty.cleanObject.mode)
-            libstmobile.setBeautyParam(BeautyParamType.EFFECT_BEAUTY_PARAM_ENABLE_WHITEN_SKIN_MASK, beauty.cleanObject.need_open_whiten_skin_mask?1:0)
-          },
-          onBeautyStrengthChanged: (beauty: BeautyObject) => {
-            libstmobile.setBeautyStrength(beauty.cleanObject.type,  (beauty.currentStrength?beauty.currentStrength:0))
-          },
-         /* onPanelClose: () => {
-            this.beautyPanelVisibility = false
-            this.bottomViewVisiablity = !this.beautyPanelVisibility
-          },*/
-          onResetOrClear: (beauties: BeautyObject[]) => {
-            beauties.forEach(element => {
-              libstmobile.setBeautyStrength(element.cleanObject.type, element.currentStrength)
-            })
-            if (this.playerState != PlayerState.PLAYER_PLAYING) {
-              this.processAndRender(this.curWidth, this.curHeight,this.curStride, this.pixelBufferRotate, false)
-            }
-          },
-          subDataSource: this.subDataSource
+          panelState: PanelState.Video,
         })
-          .height(220)
+          .height(240)
           .width('100%')
           .visibility(this.beautyPanelVisibility ? Visibility.Visible : Visibility.Hidden)
 
@@ -303,12 +206,16 @@ struct VideoPage {
         .onTouch((event) => {
           if (event.type == TouchType.Down) {
             this.comparing = true
+            if (this.playerState != PlayerState.PLAYER_PLAYING) {
+              this.processByWorker(true)
+            }
           } else if (event.type == TouchType.Up) {
             this.comparing = false
+            if (this.playerState != PlayerState.PLAYER_PLAYING) {
+              this.processByWorker(false)
+            }
           }
-          if (this.playerState != PlayerState.PLAYER_PLAYING) {
-            this.processAndRender(this.curWidth, this.curHeight,this.curStride,this.pixelBufferRotate, false, this.comparing)
-          }
+
         })
         .position({ right: 10 , bottom : this.stickerVisiabilty ? 310:230})
     }
@@ -317,265 +224,117 @@ struct VideoPage {
     .height('100%')
   }
 
-  showfps():void{
-    this.cnt++
-    if (this.lastTime == 0) {
-      this.lastTime = Date.now()
-    } else {
-      let currentTime = Date.now()
-      let delta = currentTime - this.lastTime
-      if (delta >= 1000) {
-        console.log(`fps is: ${this.cnt / delta * 1000.0}`)
-        this.lastTime = currentTime
-        this.cnt = 0
-      }
-    }
-  }
-
-  processAndRender(width:number, height:number, stride:number, rotate:number,isRecord:boolean, isOrigin:boolean=false, immediately:boolean = true): void {
-    //let stride = this.pixelBufferWidth > this.pixelBufferHeight ? this.pixelBufferHeight : this.pixelBufferWidth
-
-    if (this.outputArrayBuffer === undefined ||this.outputArrayBuffer.byteLength != this.pixelBufferWidth * this.pixelBufferHeight *  3 / 2) {
-      this.outputArrayBuffer = new ArrayBuffer(this.pixelBufferWidth * this.pixelBufferHeight * 3 / 2)
-    }
-    this.curWidth = width
-    this.curHeight = height
-    this.curStride = stride
-    libstmobile.process(this.originalDecodedPixelBuffer, PixelFormat.ST_PIX_FMT_NV21, width, height, width , rotate,false,0,this.outputArrayBuffer,PixelFormat.ST_PIX_FMT_NV21,0,isOrigin,immediately)
-    //this.showfps();
-    if (isRecord) {
-      let ret = STRecorder.pushVideoFrame(this.outputArrayBuffer, this.pixelBufferWidth,this.pixelBufferHeight)
-      if (ret != 0) {
-        console.log(`push video frame error ${ret}`);
-      }
-    }
-  }
   aboutToAppear(): void {
+    this.loadingView.showLoading({ msg: '初始化中...', isModal: true });
     BeautyResourceManager.getInstance().updateDataSource()
-    this.subDataSource = BeautyResourceManager.getInstance().dataSource[0].beauties
+    Singleton.flag = false
+  }
+
+  aboutToDisappear(): void {
+    EventBus.unListenEvent(EventType.ProcessRender)
+    EventBus.unListenEvent(EventType.VideoStateChange)
+    this.changeVideoStateByWorker(PlayerState.PLAYER_STOP)
+    Singleton.flag = true
+    this.cameraData.type = "destroy"
+    this.cameraWorker.postMessage(this.cameraData)
   }
   onXcomponentLoad() {
     libstmobile.InitializeByMode(EffectsMode.VIDEO)
-    //libstmobile.createHandle(4)
-    //const modelPath = this.writeModelToSandbox('M_SenseME_Face_Video_Template_p_4.0.0.model')
-    //this.humanActionHandle = libstmobile.st_mobile_human_action_create(modelPath, 0x00020000)
-    const models = resourceManager.getRawFileListSync(`models`)
-    models.forEach(model => {
-      const subModelPath = this.writeModelToSandbox(model,'models')
-      const result = libstmobile.addSubModelByPath(subModelPath)
-    })
-    const aniModels = resourceManager.getRawFileListSync(`aniModels`)
-    aniModels.forEach(model => {
-      const subModelPath = this.writeModelToSandbox(model,'aniModels')
-      const result = libstmobile.addAnimalSubModelByPath(subModelPath)
+    taskpool.execute(InitTask).then(()=>{
+      this.initByWorker()
+
+      setTimeout(()=>{
+        this.loadingView.hide();
+      },200)
+      console.log('onXcomponentLoad init success.')
+    }).catch((e: BusinessError) => {
+      console.error('onXcomponentLoad init : ' + e)
     })
 
     let displayInfo = display.getDefaultDisplaySync()
     libstmobile.updateWindowSize(displayInfo.width, displayInfo.height)
-    libstmobile.setResizingMode(libstmobile.RenderingResizingMode.AspectFit)
+    libstmobile.setResizingMode(RenderingResizingMode.AspectFit)
 
-    this.preparePlayerSource()
-  }
-
-  async setDefaultValue(): Promise<void> {
-    try {
-      const result: string = await new Promise((resolve: Function) => {
-        setTimeout(() => {
-          this.setDefaultEffects()
-        }, 1000);
-      });
-    } catch (e) {
-      console.error(`Get exception: ${e}`);
-    }
-  }
-
-  setDefaultEffects(){
-    let defaultEffects = BeautyResourceManager.getInstance().defaultEffects
-    defaultEffects.forEach((beauty) =>{
-      if(beauty != undefined){
-        if (beauty.cleanObject.path.length > 0) {
-          let fileContent = resourceManager.getRawFileContentSync('beauties/' + beauty.cleanObject.path)
-          const buffer = fileContent.buffer.slice(0);
-          libstmobile.setBeautyPackageByBuffer(beauty.cleanObject.type, buffer)
-        }
-        if (beauty.cleanObject.mode > 0) {
-          libstmobile.setBeautyMode(beauty.cleanObject.type, beauty.cleanObject.mode)
-        }
-        libstmobile.setBeautyStrength(beauty.cleanObject.type, beauty.currentStrength)
+    EventBus.listenEvent(EventType.ProcessRender,()=>{
+      if (this.playerState != PlayerState.PLAYER_PLAYING) {
+        this.processByWorker(false)
       }
     })
-  }
 
-  private preparePlayerSource() {
-    let setDataSourceCallback: ICallBack = {
-      callBackResult: (code: number) => {
-        if (code == 0) {
-          let stateCallBack: ICallBack = {
-            callBackResult: (state: number) => {
-              this.playerState = state
-              if ((state == PlayerState.PLAYER_STOP)) {
-                this.stopRecordVideo()
-              }
-            }
-          }
-          STPlayer.setPlayerCallback(stateCallBack);
-          let videoInfo = STPlayer.getVideoInfo();
-          //旋转
-          if (videoInfo.rotate == 1 || videoInfo.rotate == 3) {
-            this.pixelBufferWidth = videoInfo.height
-            this.pixelBufferHeight = videoInfo.width
-          }
-          else{
-            this.pixelBufferWidth = videoInfo.width
-            this.pixelBufferHeight = videoInfo.height
-          }
-          this.pixelBufferRotate = videoInfo.rotate
-          //this.photoAspectRatio = videoInfo.width / videoInfo.height
-          let isFirstFrame = true;
-          let frameCallBack: IFrameCallBack = {
-            callBackResult: (data: ArrayBuffer, width: number, height: number, rotate: number, state: number) => {
-              this.originalDecodedPixelBuffer = data.slice(0)
-              if (isFirstFrame) {
-                libstmobile.resetPixelReader()
-                isFirstFrame = false
-              }
-              this.processAndRender(width, height, width, rotate, true, this.comparing, false)
-            }
-          }
-          STPlayer.startPlay(frameCallBack);
-          this.startRecordVideo()
-        } else {
-          this.showDialog('解码器不支持该视频，请重新选择视频')
-        }
-      }
-    }
-    //相册
-    PermissionManager.requestPermissions(PERMISSIONS).then((permission) => {
-      if (permission) {
-        let file = fs.openSync(this.uri, fs.OpenMode.READ_ONLY);
-        fs.stat(file.fd).then((value) => {
-          STPlayer.setPlayerDataSource(this.uri, file.fd, value.size, setDataSourceCallback);
-        });
+    EventBus.listenEvent(EventType.VideoStateChange,(message)=>{
+      if (message.data) {
+        this.playerState = message.data['state']
       }
     })
+
   }
+  initByWorker(){
+    this.cameraData.type = "initVideo"
+    this.cameraData.uri = this.uri
+    this.cameraData.pageData.mode = PageMode.Video
+    this.cameraData.pageData.isOrigin = false
+    this.cameraData.pageData.immediately = true
+    this.cameraData.pageData.context = getContext()
+    this.cameraWorker.postMessageWithSharedSendable(this.cameraData)
 
-  uint8ArrayToArrayBuffer(uint8Array: Uint8Array) {
-    let arrayBuffer = new ArrayBuffer(uint8Array.length);
-    let bufferView = new Uint8Array(arrayBuffer);
-    bufferView.set(uint8Array);
-    return arrayBuffer;
-  }
-
-
-  aboutToDisappear(): void {
-    //libstmobile.destroyHandle()
-  }
-
-  onPageHide(): void {
-    STPlayer.stopPlay();
-/*    STPlayer.stopPlay();
-    this.stopRecordVideo()*/
-  }
-
-  showDialog(message: string) {
-    promptAction.showDialog({
-      message: message,
-      buttons: [
-        {
-          text: '好的',
-          color: '#000000'
-        }
-      ],
-    })
-      .then(data => {
-        console.info('showDialog success, click button: ' + data.index);
-      })
-  }
-
-  startRecordVideo() {
-    if (this.bStartRecord) return
-    this.bStartRecord = true
-    let path = getContext(this).cacheDir + "/record.mp4";
-    let file: fs.File = fs.openSync(path, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-    if (file.fd <= 0) {
-      console.error(`create output vidoe path error`)
-      return
+    this.cameraWorker.onmessage = (e :MessageEvents)=>{
+      this.cameraData.type = "updatePageData"
+      this.cameraData.pageData.mCustomEvent = this.mCustomEvent
+      this.cameraData.pageData.isOrigin = this.comparing
+      this.cameraData.pageData.immediately = false
+      this.cameraWorker.postMessage(this.cameraData)
+      this.mCustomEvent = 0
     }
-    let setDataSourceCallback: ICallBack = {
-      callBackResult: (code: number) => {
-        if (code == 0) {
-          let startCallback: ICallBack = {
-            callBackResult: (code: number) => {
-              if (code == 0) {
-                console.log(`STRecorder start record`);
-              }
-            }
-          }
-          STRecorder.startRecord(startCallback);
-        } else {
-          this.showDialog('输出视频路径设置失败')
-        }
-      }
-    }
-    STRecorder.setRecorderDataSource("", file.fd, this.pixelBufferWidth, this.pixelBufferHeight, 0, 0, setDataSourceCallback)
-
   }
 
-  stopRecordVideo() {
-    this.bStartRecord = false;
-    let fd = STRecorder.stopRecord();
-    if (fd > 0) {
-      fs.close(fd).then(()=>{
-        console.log(fd+"视频保存成功");
-      });
+  processByWorker(isOri:boolean = false) {
+    this.cameraData.type = "updateProcess"
+    this.cameraData.pageData.mCustomEvent = this.mCustomEvent
+    this.cameraData.pageData.isOrigin = isOri
+    this.cameraData.pageData.immediately = true
+    this.cameraWorker.postMessage(this.cameraData)
+    this.mCustomEvent = 0
+  }
+
+  changeVideoStateByWorker(videoState:PlayerState){
+    this.cameraData.type = "changeVideoState"
+    this.cameraData.pageData.changeVideoState = videoState
+    this.cameraWorker.postMessage(this.cameraData)
+  }
+
+
+  @State mCustomEvent:number = 0
+  changeCustomEvent(doubleClick:boolean) {
+    this.mCustomEvent = libstmobile.getCustomEventConfig();
+    if (doubleClick) {
+      this.mCustomEvent &= ~STCustomEvent.ST_CUSTOM_EVENT_SCREEN_TAP;
     } else {
-      this.showDialog(`视频保存失败`)
+      this.mCustomEvent &= ~STCustomEvent.ST_CUSTOM_EVENT_SCREEN_DOUBLE_TAP;
+    }
+    if (this.mCustomEvent > 0 && this.playerState != PlayerState.PLAYER_PLAYING) {
+      this.processByWorker(false)
     }
   }
 
-  saveVideo(){
-    let savePath = getContext(this).cacheDir + "/record.mp4";
-    let saveFile: fs.File = fs.openSync(savePath, fs.OpenMode.READ_ONLY);
-    if(saveFile.fd > 0){
-      PermissionManager.requestPermissions(['ohos.permission.WRITE_MEDIA']).then((permission) => {
-        if (permission) {
-          let phAccessHelper = photoAccessHelper.getPhotoAccessHelper(context);
-          let options: photoAccessHelper.CreateOptions = {
-            title: Date.now().toString()
-          };
-          phAccessHelper.createAsset(photoAccessHelper.PhotoType.VIDEO, 'mp4', options, (error, videoUri) => {
-            if (error) {
-              this.showDialog('输出视频路径设置失败')
-            } else {
-              let file: fs.File = fs.openSync(videoUri, fs.OpenMode.READ_WRITE | fs.OpenMode.CREATE);
-              fs.copyFileSync(saveFile.fd, file.fd)
-              fs.close(saveFile.fd)
-              fs.close(file.fd)
-              promptAction.showToast({ message: 'video save success', duration: 1000 })
-            }
-          });
-        } else {
-          this.showDialog('请开启相册视频写入权限')
-        }
-      })
-    }else{
-      this.showDialog('保存视频失败')
-    }
-  }
+}
+@Concurrent
+async function InitTask() {
+  let context: common.Context = sendableContextManager.convertToContext(singletonContext.getContext())
+  let resourceManager = context.resourceManager
+  let filesDir = context.filesDir
 
-  writeModelToSandbox(modelName: string, dir:string): string {
+  let writeModelToSandbox = (modelName: string, dir:string)=>{
     const modelPath = filesDir + '/' + modelName
     if (fs.accessSync(modelPath)) {
       return modelPath;
     }
     const fileContent = resourceManager.getRawFileContentSync(dir + '/' + modelName)
     const fileArrayBuffer = fileContent.buffer.slice(0)
-    this.writeBufferToPath(fileArrayBuffer, modelPath)
+    writeBufferToPath(fileArrayBuffer, modelPath)
     return modelPath
   }
 
-  writeBufferToPath(contentBuffer: ArrayBuffer, targetPath: string): void {
+  let writeBufferToPath = (contentBuffer: ArrayBuffer, targetPath: string)=> {
     if (fs.accessSync(targetPath)) {
       fs.unlinkSync(targetPath)
     }
@@ -583,4 +342,31 @@ struct VideoPage {
     let writeLength = fs.writeSync(destFile.fd, contentBuffer)
     fs.closeSync(destFile)
   }
+
+  const models = resourceManager.getRawFileListSync(`models`)
+  models.forEach(model => {
+    const subModelPath = writeModelToSandbox(model,'models')
+    const result = libstmobile.addSubModelByPath(subModelPath)
+  })
+
+  const bodyModelPath = writeModelToSandbox('M_SenseME_Body_Contour_77_ppl3_1.3.5.model','models_body')
+  const result = libstmobile.addSubModelByPath(bodyModelPath)
+
+  const aniModels = resourceManager.getRawFileListSync(`aniModels`)
+  aniModels.forEach(model => {
+    const subModelPath = writeModelToSandbox(model,'aniModels')
+    const result = libstmobile.addAnimalSubModelByPath(subModelPath)
+  })
+  const ganModels = resourceManager.getRawFileListSync(`gan_model`)
+  ganModels.forEach(model => {
+    const subModelPath = writeModelToSandbox(model,'gan_model')
+    const result = libstmobile.setBeautyPackageByPath(BeautyType.EFFECT_BEAUTY_BASE_FACE_SMOOTH, subModelPath)
+  })
+  const skinDetailPath = writeModelToSandbox('SDKSkinDetailAssets0924.zip','beauty_materials')
+  libstmobile.setBeautyPackageByPath(BeautyType.EFFECT_RESOURCE_EXTERNAL, skinDetailPath)
+  const beautyPath = writeModelToSandbox('3DMicroPlasticDefault.zip','beauty_materials')
+  libstmobile.setBeautyPackageByPath(BeautyType.EFFECT_BEAUTY_3D_MICRO_PLASTIC, beautyPath)
+  libstmobile.updateFaceMeshList(MeshType.ST_MOBILE_FACE_MESH)
+
+  EventBus.emitEvent(EventType.OnModelLoaded)
 }

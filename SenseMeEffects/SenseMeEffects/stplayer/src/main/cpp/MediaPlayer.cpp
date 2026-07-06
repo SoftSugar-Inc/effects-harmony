@@ -245,6 +245,16 @@ P_RESULT MediaPlayer::getAVtrackIndexs(){
        }else if (trackType == OH_MediaType::MEDIA_TYPE_AUD) {
             m_audioTrackIndex = index;
         }
+        
+         int32_t isHDRVivid = 0;
+         bool getHdrRet = OH_AVFormat_GetIntValue(trackFormat, OH_MD_KEY_VIDEO_IS_HDR_VIVID, &isHDRVivid);
+        if (getHdrRet == false || isHDRVivid == 0) {
+             LOGE(PLAYERTAG,"video is not HDRVivid ");
+        }
+        else{
+            LOGE(PLAYERTAG,"video is HDRVivid ");
+            is_hevc = true;
+        }
        OH_AVFormat_Destroy(trackFormat);
     }
     if (OH_AVDemuxer_SelectTrackByID(m_demuxer, m_audioTrackIndex) != AV_ERR_OK) {

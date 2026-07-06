@@ -1,0 +1,112 @@
+[
+  {
+    "uid": "try_on_makeup_lip",
+    "des": "TryOn口红",
+    "display_des_res_id": "try_on_title2",
+    "asset_path": "tryOn/lip",
+    "select_icon_nor_res_id": "ic_shz_kouhong_nor",
+    "select_icon_press_res_id": "ic_shz_kouhong_selected",
+    "group_id": "29",
+    "beauty_type": 702
+  },
+  {
+    "uid": "try_on_makeup_hair",
+    "des": "TryOn染发",
+    "display_des_res_id": "try_on_title3",
+    "asset_path": "tryOn/hair",
+    "select_icon_nor_res_id": "ic_shz_ranfa_nor",
+    "select_icon_press_res_id": "ic_shz_ranfa_selected",
+    "group_id": "30",
+    "beauty_type": 701
+  },
+  {
+    "uid": "try_on_makeup_lip_line",
+    "des": "TryOn唇线",
+    "display_des_res_id": "try_on_title4",
+    "asset_path": "tryOn/lipline",
+    "select_icon_nor_res_id": "ic_shz_chunx_nor",
+    "select_icon_press_res_id": "ic_shz_chunx_selected",
+    "group_id": "31",
+    "beauty_type": 703
+  },
+  {
+    "uid": "try_on_makeup_eye_shadow",
+    "des": "TryOn眼影",
+    "display_des_res_id": "try_on_title5",
+    "asset_path": "tryOn/eyeShadow",
+    "select_icon_nor_res_id": "ic_shz_yanying_nor",
+    "select_icon_press_res_id": "ic_shz_yanying_selected",
+    "group_id": "32",
+    "beauty_type": 708
+  },
+  {
+    "uid": "try_on_makeup_eyeliner",
+    "des": "TryOn眼线",
+    "display_des_res_id": "try_on_title6",
+    "asset_path": "tryOn/eyeliner",
+    "select_icon_nor_res_id": "ic_shz_yanxian_nor",
+    "select_icon_press_res_id": "ic_shz_yanxian_selected",
+    "group_id": "33",
+    "beauty_type": 709
+  },
+  {
+    "uid": "try_on_makeup_eye_print",
+    "des": "TryOn眼印",
+    "display_des_res_id": "try_on_title7",
+    "asset_path": "tryOn/eyePrint",
+    "select_icon_nor_res_id": "ic_shz_yanyin_nor",
+    "select_icon_press_res_id": "ic_shz_yanyin_selected",
+    "group_id": "34",
+    "beauty_type": 711
+  },
+  {
+    "uid": "try_on_makeup_eye_lash",
+    "des": "TryOn眼睫毛",
+    "display_des_res_id": "try_on_title8",
+    "asset_path": "tryOn/eyeLash",
+    "select_icon_nor_res_id": "ic_shz_jiemao_nor",
+    "select_icon_press_res_id": "ic_shz_jiemao_selected",
+    "group_id": "35",
+    "beauty_type": 710
+  },
+  {
+    "uid": "try_on_makeup_eye_brow",
+    "des": "TryOn眉毛",
+    "display_des_res_id": "try_on_title9",
+    "asset_path": "tryOn/eyeBrow",
+    "select_icon_nor_res_id": "ic_shz_meimao_nor",
+    "select_icon_press_res_id": "ic_shz_meimao_selected",
+    "group_id": "36",
+    "beauty_type": 705
+  },
+  {
+    "uid": "try_on_makeup_blush",
+    "des": "TryOn腮红",
+    "display_des_res_id": "try_on_title10",
+    "asset_path": "tryOn/blush",
+    "select_icon_nor_res_id": "ic_shz_saihong_nor",
+    "select_icon_press_res_id": "ic_shz_saihong_selected",
+    "group_id": "37",
+    "beauty_type": 704
+  },
+  {
+    "uid": "try_on_makeup_trimming",
+    "des": "TryOn修容",
+    "display_des_res_id": "try_on_title11",
+    "asset_path": "tryOn/trimming",
+    "select_icon_nor_res_id": "ic_shz_xiurong_nor",
+    "select_icon_press_res_id": "ic_shz_xiurong_selected",
+    "group_id": "38",
+    "beauty_type": 707
+  },
+  {
+    "uid": "try_on_makeup_foundation",
+    "des": "TryOn粉底",
+    "display_des_res_id": "try_on_title12",
+    "asset_path": "tryOn/foundation",
+    "select_icon_nor_res_id": "ic_shz_fendi_nor",
+    "select_icon_press_res_id": "ic_shz_fendi_selected",
+    "group_id": "39",
+    "beauty_type": 706
+  }
+]

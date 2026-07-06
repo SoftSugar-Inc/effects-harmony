@@ -8,5 +8,6 @@ export const setStateCallback:(callback:Function) => void;
 export const stopPlay:() => void;
 export const setRecorderDataSource:(filePath:string, fd : number, width:number, height:number , format :number,  rotate : number) => Promise<number>;
 export const startRecord:() => Promise<number>;
-export const pushVideoFrame:(buffer:ArrayBuffer, width:number, height:number) => number;
+export const pushVideoFrame:(buffer:ArrayBuffer, width:number, height:number, timestamp?:number) => number;
 export const stopRecord:() => number;
+export const setRecorderStateCallback:(callback:Function) => void;

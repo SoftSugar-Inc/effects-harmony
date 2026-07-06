@@ -3,11 +3,11 @@
   "version": "$string:version",
   "description": "Please describe the basic information.",
   "main": "",
-  "author": "",
+  "author": "SoftSugar Inc.",
   "license": "",
   "dependencies": {
-    "libentry.so": "file:./src/main/cpp/types/libentry",
-    "@ohos/stplayer": "file:../stplayer"
+    "@softsugar/mars_effects": "file:../mars_effects",
+    "stplayer": "file:../stplayer"
   },
   "devDependencies": {},
   "dynamicDependencies": {}

@@ -13,36 +13,70 @@
       "value": "Effects"
     },
     {
-      "name": "homepage_beauty_entrance",
-      "value": "美颜"
-    },
-    {
-      "name": "homepage_lvjing",
-      "value": "滤镜"
-    },
-    {
-      "name": "homepage_meizhuang",
-      "value": "美妆"
-    },
-    {
-      "name": "homepage_texiao",
-      "value": "特效"
-    },
-    {
-      "name": "DeliciousFoodFilters",
+      "name": "7_DeliciousFoodFilters",
       "value": "美食"
     },
     {
-      "name": "PortraitFilters",
+      "name": "4_PortraitFilters",
       "value": "人物"
     },
     {
-      "name": "SceneryFilters",
+      "name": "5_SceneryFilters",
       "value": "风景"
     },
     {
-      "name": "StillLifeFilters",
+      "name": "6_StillLifeFilters",
       "value": "静物"
+    },
+    {
+      "name": "2_filter_film",
+      "value": "胶片"
+    },
+    {
+      "name": "1_filter_texture",
+      "value": "质感"
+    },
+    {
+      "name": "3_filter_vintage",
+      "value": "复古"
+    }    ,
+    {
+      "name": "ic_main_effect",
+      "value": "美颜"
+    },
+    {
+      "name": "ic_main_filter",
+      "value": "滤镜"
+    },
+    {
+      "name": "ic_main_makeup",
+      "value": "美妆"
+    },
+    {
+      "name": "ic_main_sticker",
+      "value": "特效"
+    },
+    {
+      "name": "ic_main_style",
+      "value": "风格妆"
+    },
+    {
+      "name": "ic_main_avatar",
+      "value": "Avatar"
+    }
+  ,
+    {
+      "name": "ic_main_tryon",
+      "value": "Try On"
+    },
+    {
+      "name": "ic_main_is_me",
+      "value": "It's me"
+    }
+  ,
+    {
+      "name": "ic_main_all",
+      "value": "全部效果"
     }
   ]
 }

@@ -1,7 +1,18 @@
 import cryptoFramework from "@ohos.security.cryptoFramework"
-import { util } from '@kit.ArkTS';
+import { buffer, util } from '@kit.ArkTS';
 
 export class STCrypto {
+  public static async doMd(message:string) {
+    let mdAlgName = 'MD5'; // 摘要算法名
+    let md = cryptoFramework.createMd(mdAlgName);
+    await md.update({ data: new Uint8Array(buffer.from(message, 'utf-8').buffer) });
+    let mdResult = await md.digest();
+    const hex = Array.from(mdResult.data)
+      .map(byte => byte.toString(16).padStart(2, '0'))
+      .join('');
+    return hex
+  }
+
   public static sha1(input : string) : string  {
     const dataBlob : cryptoFramework.DataBlob = {
       data: STCrypto.stringToUin8Array(input)

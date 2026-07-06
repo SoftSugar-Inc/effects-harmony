@@ -1,0 +1,266 @@
+[
+  {
+    "uid": "mouthScale",
+    "des": "嘴巴比例",
+    "beauty_type": 0,
+    "display_des_res_id": "plastic_3d_mouth_1",
+    "select_icon_nor_res": "wzh3d_nose_bili_unselected",
+    "select_icon_press_res": "wzh3d_nose_bili_selected",
+    "def_strength": 0,
+    "is_3d_plastic": true,
+    "range_negative_to_positive": true
+  },
+  {
+    "uid": "mouthHeight",
+    "des": "嘴巴高度",
+    "beauty_type": 0,
+    "display_des_res_id": "plastic_3d_mouth_2",
+    "select_icon_nor_res": "wzh3d_nose_gd_unselected",
+    "select_icon_press_res": "wzh3d_nose_gd_selected",
+    "def_strength": 0,
+    "is_3d_plastic": true,
+    "range_negative_to_positive": true
+  },
+  {
+    "uid": "mouthWidth",
+    "des": "嘴巴宽度",
+    "beauty_type": 0,
+    "display_des_res_id": "plastic_3d_mouth_3",
+    "select_icon_nor_res": "wzh3d_nose_kuan_unselected",
+    "select_icon_press_res": "wzh3d_nose_kuan_selected",
+    "def_strength": 0,
+    "range_negative_to_positive": true,
+    "is_3d_plastic": true
+  },
+  {
+    "uid": "mouthDepth",
+    "des": "嘴巴深度",
+    "beauty_type": 0,
+    "display_des_res_id": "plastic_3d_mouth_4",
+    "select_icon_nor_res": "wzh3d_nose_shen_unselected",
+    "select_icon_press_res": "wzh3d_nose_shen_selected",
+    "def_strength": 0,
+    "range_negative_to_positive": true,
+    "is_3d_plastic": true
+  },
+  {
+    "uid": "lipThin",
+    "des": "嘴巴厚度",
+    "beauty_type": 0,
+    "display_des_res_id": "plastic_3d_mouth_5",
+    "select_icon_nor_res": "wzh3d_nose_hou_unselected",
+    "select_icon_press_res": "wzh3d_nose_hou_selected",
+    "def_strength": 0,
+    "is_3d_plastic": true,
+    "range_negative_to_positive": true
+  },
+  {
+    "uid": "Beeplips",
+    "beauty_type": 0,
+    "is_3d_plastic": true,
+    "des": "嘟嘟唇",
+    "display_des_res_id": "plastic_3d_face_5",
+    "select_icon_nor_res": "wzh3d_chun_dudu_unselected",
+    "select_icon_press_res": "wzh3d_chun_dudu_selected",
+    "def_strength": 0
+  },
+  {
+    "uid": "Smilinglips",
+    "beauty_type": 0,
+    "des": "微笑唇",
+    "display_des_res_id": "plastic_3d_face_6",
+    "select_icon_nor_res": "wzh3d_chun_wx_unselected",
+    "is_3d_plastic": true,
+    "select_icon_press_res": "wzh3d_chun_wx_selected",
+    "def_strength": 0,
+    "range_negative_to_positive": true
+  },
+  {
+    "uid": "noseDepth",
+    "beauty_type": 0,
+    "des": "鼻高",
+    "is_3d_plastic": true,
+    "display_des_res_id": "plastic_3d_nose_4",
+    "select_icon_nor_res": "wzh3d_nose_bigao_unselected",
+    "select_icon_press_res": "wzh3d_nose_bigao_selected",
+    "def_strength": 0,
+    "range_negative_to_positive": true
+  },
+  {
+    "uid": "noseRidgeUpper",
+    "beauty_type": 0,
+    "des": "鼻根",
+    "is_3d_plastic": true,
+    "display_des_res_id": "plastic_3d_nose_5",
+    "select_icon_nor_res": "wzh3d_nose_bigen_unselected",
+    "select_icon_press_res": "wzh3d_nose_bigen_selected",
+    "def_strength": 0,
+    "range_negative_to_positive": true
+  },
+  {
+    "uid": "noseRidgeCurve",
+    "beauty_type": 0,
+    "des": "鼻子驼峰",
+    "is_3d_plastic": true,
+    "display_des_res_id": "plastic_3d_nose_6",
+    "select_icon_nor_res": "wzh3d_nose_tuofeng_unselected",
+    "select_icon_press_res": "wzh3d_nose_tuofeng_selected",
+    "def_strength": 0,
+    "range_negative_to_positive": true
+  },
+  {
+    "uid": "nostrilWidth",
+    "beauty_type": 0,
+    "des": "鼻翼",
+    "is_3d_plastic": true,
+    "display_des_res_id": "plastic_3d_nose_8",
+    "select_icon_nor_res": "wzh3d_nose_biyi_unselected",
+    "select_icon_press_res": "wzh3d_nose_biyi_selected",
+    "def_strength": 0,
+    "range_negative_to_positive": true
+  },
+  {
+    "uid": "eyeOuterWidth",
+    "beauty_type": 0,
+    "des": "外眼角",
+    "is_3d_plastic": true,
+    "display_des_res_id": "plastic_3d_eye_4",
+    "select_icon_nor_res": "wzh3d_eye_4_unselected",
+    "select_icon_press_res": "wzh3d_eye_4_selected",
+    "def_strength": 0,
+    "range_negative_to_positive": true
+  },
+  {
+    "uid": "eyeDepth",
+    "beauty_type": 0,
+    "is_3d_plastic": true,
+    "des": "眼睛深浅",
+    "display_des_res_id": "plastic_3d_eye_5",
+    "select_icon_nor_res": "wzh3d_eye_5_unselected",
+    "select_icon_press_res": "wzh3d_eye_5_selected",
+    "def_strength": 0,
+    "range_negative_to_positive": true
+  },
+  {
+    "uid": "eyeLowerDepth",
+    "beauty_type": 0,
+    "des": "卧蚕深浅",
+    "is_3d_plastic": true,
+    "display_des_res_id": "plastic_3d_eye_6",
+    "select_icon_nor_res": "wzh3d_eye_6_unselected",
+    "select_icon_press_res": "wzh3d_eye_6_selected",
+    "def_strength": 0,
+    "range_negative_to_positive": true
+  },
+  {
+    "uid": "eyeAngle",
+    "beauty_type": 0,
+    "des": "眼睛角度",
+    "is_3d_plastic": true,
+    "display_des_res_id": "plastic_3d_eye_7",
+    "select_icon_nor_res": "wzh3d_eye_7_unselected",
+    "select_icon_press_res": "wzh3d_eye_7_selected",
+    "def_strength": 0,
+    "range_negative_to_positive": true
+  },
+  {
+    "uid": "Outereyetail",
+    "beauty_type": 0,
+    "des": "外眼尾",
+    "is_3d_plastic": true,
+    "display_des_res_id": "plastic_3d_eye_outereyetail",
+    "select_icon_nor_res": "wzh3d_eye_outereyetail_unselected",
+    "select_icon_press_res": "wzh3d_eye_outereyetail_selected",
+    "def_strength": 0
+  },
+  {
+    "uid": "Innercorner",
+    "beauty_type": 0,
+    "des": "内眼角尖",
+    "is_3d_plastic": true,
+    "display_des_res_id": "plastic_3d_eye_innercorner",
+    "select_icon_nor_res": "wzh3d_eye_innercorner_unselected",
+    "select_icon_press_res": "wzh3d_eye_innercorner_selected",
+    "def_strength": 0
+  },
+  {
+    "uid": "Cheekbone",
+    "beauty_type": 0,
+    "des": "苹果肌",
+    "is_3d_plastic": true,
+    "display_des_res_id": "plastic_3d_face_7",
+    "select_icon_nor_res": "wzh3d_pingguo_unselected",
+    "select_icon_press_res": "wzh3d_pingguo_selected",
+    "def_strength": 0
+  },
+  {
+    "uid": "Forehead",
+    "beauty_type": 0,
+    "des": "额头",
+    "is_3d_plastic": true,
+    "display_des_res_id": "micro_3d_forehead",
+    "select_icon_nor_res": "micro_3d_forehead_unselected",
+    "select_icon_press_res": "micro_3d_forehead_selected",
+    "def_strength": 0
+  },
+  {
+    "uid": "Nasolabial",
+    "beauty_type": 0,
+    "des": "法令纹",
+    "is_3d_plastic": true,
+    "display_des_res_id": "micro_3d_nasolabial",
+    "select_icon_nor_res": "micro_3d_nasolabial_unselected",
+    "select_icon_press_res": "micro_3d_nasolabial_selected",
+    "def_strength": 0
+  },
+  {
+    "uid": "Tearditch",
+    "beauty_type": 0,
+    "des": "泪沟",
+    "is_3d_plastic": true,
+    "display_des_res_id": "micro_3d_tearditch",
+    "select_icon_nor_res": "micro_3d_tearditch_unselected",
+    "select_icon_press_res": "micro_3d_tearditch_selected",
+    "def_strength": 0
+  },
+  {
+    "uid": "Browbone",
+    "beauty_type": 0,
+    "des": "眉骨",
+    "is_3d_plastic": true,
+    "display_des_res_id": "micro_3d_browbone",
+    "select_icon_nor_res": "micro_3d_browbone_unselected",
+    "select_icon_press_res": "micro_3d_browbone_selected",
+    "def_strength": 0
+  },
+  {
+    "uid": "Raiseeyebrows",
+    "beauty_type": 0,
+    "des": "挑眉",
+    "is_3d_plastic": true,
+    "display_des_res_id": "micro_3d_raiseeyebrows",
+    "select_icon_nor_res": "micro_3d_raiseeyebrows_unselected",
+    "select_icon_press_res": "micro_3d_raiseeyebrows_selected",
+    "def_strength": 0
+  },
+  {
+    "uid": "Temple",
+    "beauty_type": 0,
+    "des": "太阳穴",
+    "is_3d_plastic": true,
+    "display_des_res_id": "micro_3d_temple",
+    "select_icon_nor_res": "micro_3d_temple_unselected",
+    "select_icon_press_res": "micro_3d_temple_selected",
+    "def_strength": 0
+  },
+  {
+    "uid": "Foreheadtwo",
+    "beauty_type": 0,
+    "des": "侧额头",
+    "is_3d_plastic": true,
+    "display_des_res_id": "micro_3d_foreheadtwo",
+    "select_icon_nor_res": "micro_3d_forehead_unselected",
+    "select_icon_press_res": "micro_3d_forehead_selected",
+    "def_strength": 0
+  }
+]

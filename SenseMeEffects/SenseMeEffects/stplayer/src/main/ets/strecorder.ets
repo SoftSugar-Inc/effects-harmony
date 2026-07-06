@@ -31,10 +31,10 @@ export class STRecorder {
    * @param video data
    * @param vidoe width
    * @param vidoe height
-   * @param path
+   * @param timestamp 可选的时间戳参数（微秒）
    */
-  static pushVideoFrame(buffer:ArrayBuffer, width:number, height:number) : number{
-   return strecorder.pushVideoFrame(buffer, width, height);
+  static pushVideoFrame(buffer:ArrayBuffer, width:number, height:number, timestamp?:number) : number{
+   return strecorder.pushVideoFrame(buffer, width, height, timestamp);
   }
 
   /**
@@ -42,5 +42,13 @@ export class STRecorder {
    */
   static stopRecord() : number{
     return strecorder.stopRecord()
+  }
+
+  /**
+   * set recorder state callback
+   * @param callBack 回调函数，接收状态码参数
+   */
+  static setRecorderStateCallback(callBack: (state: number) => void) {
+    strecorder.setRecorderStateCallback(callBack);
   }
 }

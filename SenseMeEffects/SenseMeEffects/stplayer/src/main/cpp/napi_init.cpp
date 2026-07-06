@@ -26,6 +26,8 @@ shared_ptr<MediaRecorder> g_recorder;
 napi_env g_envMessage;
 napi_ref g_callBackRefMessage;
 napi_ref g_stateCallBack;
+napi_env g_envRecorderMessage;
+napi_ref g_recorderStateCallBack;
 void* g_buffer;
 napi_value g_arrayBuffer;
 
@@ -93,6 +95,13 @@ static napi_value setPlayerDataSource(napi_env env, napi_callback_info info) {
         env, nullptr, resourceName,
         [](napi_env env, void *data) {
             GetFrameAsyncCallbackInfo *asyncCallbackInfo = (GetFrameAsyncCallbackInfo *)data;
+            // 关键修复:在创建新的player前,先停止并释放旧的player
+            if (g_player) {
+                LOGI(TAG, "Stopping previous player before creating new one");
+                g_player->stop();
+                g_player.reset();
+            }
+            
             g_player = make_shared<MediaPlayer>();
             if(g_player->setDataSource(asyncCallbackInfo->path, asyncCallbackInfo->fd, asyncCallbackInfo->size) != PLAYER_OK){
                 asyncCallbackInfo->state = -1;
@@ -225,6 +234,41 @@ void stateCallback(int state){
         });
 }
 
+// 录制状态回调函数
+void recorderStateCallback(int state) {
+    struct GetFrameAsyncCallbackInfo *context = new GetFrameAsyncCallbackInfo();
+    context->env = g_envRecorderMessage;
+    uv_loop_s *loopMessage = nullptr;
+    napi_get_uv_event_loop(context->env, &loopMessage);
+    if (loopMessage == nullptr) {
+        LOGI(TAG, "napi-->recorder loopMessage null");
+        return;
+    }
+    uv_work_t *work = new (std::nothrow) uv_work_t;
+    if (work == nullptr) {
+        LOGI(TAG, "napi-->recorder work null");
+        return;
+    }
+    context->state = state;
+    context->callbackRef = g_recorderStateCallBack;
+    work->data = (void *)context;
+    uv_queue_work(
+        loopMessage, work, [](uv_work_t *work) {}, 
+        [](uv_work_t *work, int status) {  
+            GetFrameAsyncCallbackInfo *context = static_cast<GetFrameAsyncCallbackInfo *>(work->data);
+            napi_value callback = nullptr;
+            napi_get_reference_value(context->env, context->callbackRef, &callback);
+            napi_value result[PARAM_COUNT_1] = {nullptr};
+            napi_create_int32(context->env, context->state, &result[0]);
+            napi_value ret = 0;
+            napi_call_function(context->env, nullptr, callback, PARAM_COUNT_1, result, &ret);
+            if (work != nullptr) {
+                delete work;
+            }
+            delete context;
+        });
+}
+
 static napi_value PlayerGetVideoInfo(napi_env env, napi_callback_info info) { 
     LOGI(TAG, "PlayerGetVideoInfo");
     if (g_player) {
@@ -312,6 +356,23 @@ static napi_value PlayerStateCallback(napi_env env, napi_callback_info info) {
     return nullptr;
 }
 
+static napi_value RecorderStateCallback(napi_env env, napi_callback_info info) {
+    LOGI(TAG, "RecorderStateCallback");
+    size_t argc = 1;
+    napi_value args[1];
+    napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    napi_value callback = args[0];
+    napi_ref callBackRefMessage_;
+    napi_create_reference(env, callback, 1, &callBackRefMessage_);
+    g_recorderStateCallBack = callBackRefMessage_;
+    g_envRecorderMessage = env;
+    if (g_recorder) {
+        LOGI(TAG, "RecorderStateCallback");
+        g_recorder->setRecordStateCallback(recorderStateCallback);
+    }
+    return nullptr;
+}
+
 static napi_value PlayerResume(napi_env env, napi_callback_info info) {
     LOGI(TAG, "PlayerResume");
     if (g_player) {
@@ -325,7 +386,7 @@ static napi_value PlayerStop(napi_env env, napi_callback_info info) {
     LOGI(TAG, "PlayerStop");
     if (g_player) {
         g_player->stop();
-        g_player = nullptr;
+        g_player.reset(); // 使用reset()显式释放
     }
     return nullptr;
 }
@@ -367,6 +428,13 @@ static napi_value setRecorderDataSource(napi_env env, napi_callback_info info) {
         env, nullptr, resourceName,
         [](napi_env env, void *data) {
             RecorderContext *info = (RecorderContext *)data;
+            // 关键修复:在创建新的recorder前,先停止并释放旧的recorder
+            if (g_recorder) {
+                LOGI(TAG, "Stopping previous recorder before creating new one");
+                g_recorder->stopRecord();
+                g_recorder.reset(); // 显式释放旧对象
+            }
+            
             g_recorder = make_shared<MediaRecorder>();
             auto recoreBean = make_unique<RecordBean>();
             recoreBean->m_fd = info->fd;
@@ -374,6 +442,10 @@ static napi_value setRecorderDataSource(napi_env env, napi_callback_info info) {
             if(info->height)recoreBean->m_height = info->height;
             if(info->rotate)recoreBean->m_rotate = info->rotate;
             g_recorder->recordBean = move(recoreBean);
+            // 设置状态回调
+            if (g_recorderStateCallBack != nullptr) {
+                g_recorder->setRecordStateCallback(recorderStateCallback);
+            }
             if (g_recorder->setRecordPath() != RECORDER_OK) {
                 info->state = -1;
             }
@@ -432,22 +504,39 @@ static napi_value PushVideoFrame(napi_env env, napi_callback_info info) {
         napi_create_int32(env, -1, &funcResult);
         return funcResult;
     }
-    size_t argc = 3;
-    napi_value args[3] = {nullptr};
+    size_t argc = 4;  // 增加时间戳参数
+    napi_value args[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    
+    // 检查参数数量
+    if (argc < 3) {
+        LOGI(TAG, "pushVideoFrame: 参数不足");
+        napi_create_int32(env, -1, &funcResult);
+        return funcResult;
+    }
+    
     size_t inputBufferLength;
-    void *inputBuffer = nullptr; // The pointer to the underlying data buffer used to get the arraybuffer.
+    void *inputBuffer = nullptr;
     napi_status status = napi_get_arraybuffer_info(env, args[0], &inputBuffer, &inputBufferLength);
+    
     uint32_t width = 0;
     napi_get_value_uint32(env, args[1], &width);
     uint32_t height = 0;
     napi_get_value_uint32(env, args[2], &height);
+    
+    // 获取时间戳参数（可选）
+    int64_t timestamp = -1;
+    if (argc >= 4) {
+        napi_get_value_int64(env, args[3], &timestamp);
+    }
+    
     if (status != napi_ok) {
-        LOGI(TAG, "napi_get_arraybuffer_info 666 error %{public}d", status);
+        LOGI(TAG, "napi_get_arraybuffer_info error %{public}d", status);
         napi_create_int32(env, -1, &funcResult);
         return funcResult;
     }
-    int ret = g_recorder->pushFrameData((uint8_t *)inputBuffer, width, height);
+    
+    int ret = g_recorder->pushFrameData((uint8_t *)inputBuffer, width, height, timestamp);
     napi_create_int32(env, ret, &funcResult);
     return funcResult;
 }
@@ -455,9 +544,13 @@ static napi_value PushVideoFrame(napi_env env, napi_callback_info info) {
 static napi_value RecorderStop(napi_env env, napi_callback_info info) {
     LOGI(TAG, "RecorderStop");
     if (g_recorder) {
+        int fd = g_recorder->recordBean->m_fd;
         g_recorder->stopRecord();
+        // 关键修复:停止后显式释放g_recorder,防止下次使用时冲突
+        g_recorder.reset();
+        
         napi_value funcResult;
-        napi_create_int32(env, g_recorder->recordBean->m_fd, &funcResult);
+        napi_create_int32(env, fd, &funcResult);
         return funcResult;
     }
     return nullptr;
@@ -480,6 +573,7 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("startRecord", RecorderStart),
         DECLARE_NAPI_FUNCTION("pushVideoFrame", PushVideoFrame),
         DECLARE_NAPI_FUNCTION("stopRecord", RecorderStop),
+        DECLARE_NAPI_FUNCTION("setRecorderStateCallback", RecorderStateCallback),
     };
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
     return exports;

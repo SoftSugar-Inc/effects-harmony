@@ -1,0 +1,11 @@
+{
+  "name": "@softsugar/mars_effects",
+  "version": "9.8.0",
+  "description": "SenseAR Effects SDK",
+  "main": "Index.ets",
+  "author": "SoftSugar Inc.",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "dependencies": {
+    "libentry.so": "file:./src/main/cpp/types/libentry"
+  }
+}

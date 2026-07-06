@@ -1,49 +1,139 @@
 import { picker } from '@kit.CoreFileKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { router } from '@kit.ArkUI';
-import libstmobile from 'libentry.so';
+import libstmobile from '@softsugar/mars_effects';
 import { promptAction } from '@kit.ArkUI'
-import BeautyResourceManager from '../models/Beauty/BeautyResourceManager';
-import {
-  XTHUDLoading,
-  XTHUDManager
-} from '@jxt/xt_hud'
-import { STMaterialManager } from '../models/STMaterialManager'
-import { STDefines } from '../common/STDefines';
+import { connection } from '@kit.NetworkKit'
 
+import { STMaterialManager } from '../models/STMaterialManager'
+import { HomeGrid, HomeType, STDefines } from '../common/STDefines';
+import { common } from '@kit.AbilityKit';
+import STLicense from '../utils/STLicense';
+import { JSON, util } from '@kit.ArkTS';
+import DBManager from '../models/DBJson/DBManager';
+import { LoadingView } from '../utils/LoadingView';
+import PermissionManager from '../utils/Permission';
+
+const context = getContext(this) as common.UIAbilityContext;
+const filesDir = context.filesDir
+const resourceManager = context.resourceManager
 
 @Entry
 @Component
 struct Index {
   private controller: SwiperController = new SwiperController();
   private result = false;
-  @State btnEnable : boolean = true
+  @State bannerImgUri: string[] = []
+  @State bannerHtmlUri: string[] = []
+
+  loadingView: LoadingView = new LoadingView();
 
   //相当于iOS中的viewDidLoad只加载一次
   aboutToAppear(): void {
-    //this.mhm_test()
-    let context = getContext()
-    let resourceManager = context.resourceManager
-    let licenseContent = resourceManager.getRawFileContentSync('license/license.lic')
-    const buffer = licenseContent.buffer.slice(0);
-    this.result = libstmobile.checkLicenseByBuffer(buffer)
+    let decoder = new util.StringDecoder('utf-8')
+    const homeContent = resourceManager.getRawFileContentSync('home/home.json')
+    const homeText = decoder.write(homeContent)
+    let homeGrids = JSON.parse(homeText) as HomeGrid[]
+
+    STDefines.homeGrids = homeGrids
+
+    this.bannerInit()
+    this.checkLic()
+  }
+
+  async checkLic(){
+    const configContent = resourceManager.getRawFileContentSync('config.json')
+    let decoder = new util.StringDecoder('utf-8')
+    const configTxt = decoder.write(configContent)
+    let config = JSON.parse(configTxt) as object
+    if (config["license"]){
+      const fileContent = resourceManager.getRawFileContentSync((config["license"]))
+      this.result = libstmobile.checkLicenseByBuffer(fileContent.buffer.slice(0))
+    }else {
+      const licPath = filesDir+"/senseme.lic"
+      await STLicense.GetLicenseOnLine(licPath,config["appID"],config["appKey"])
+      this.result =  libstmobile.checkLicenseByPath(licPath)
+      if (!this.result) {
+        promptAction.showDialog({
+          message: `网络错误: 无法校验license,demo不可用`,
+          offset:{dx:0,dy:200}
+        })
+        return
+      }
+    }
     if (!this.result) {
       promptAction.showToast({
         message: `check license error ${this.result}`,
         duration: 2000
       })
-    }else{
-      setTimeout(() => {
-        this.GetGroupList()
-      }, 500)
+      return
     }
+    setTimeout(async ()=>{
+      await this.GetGroupList()
+      if (!DBManager.Instance().getUserInfo()) {
+        this.routerPage("ScanFacePage")
+      }
+      else {
+        let user = DBManager.Instance().getUserInfo()
+      }
+    },500)
+
+  }
+  async GetGroupList(){
+    try {
+      this.loadingView.showLoading({ msg: '加载中...', isModal: true });
+      let manager = STMaterialManager.GetInstance()
+      await manager.GetGroupList()
+      this.loadingView.hide()
+    }
+    catch (e){
+      this.loadingView.hide()
+    }
+
   }
 
-  async GetGroupList(){
-    XTHUDManager.showLoading('加载中...')
-    let manager = STMaterialManager.GetInstance()
-    await manager.GetGroupList()
-    XTHUDManager.hideLoading()
+
+
+  async routerPage(pageName:string, param?:object|undefined){
+    try {
+      let hasNet = this.judgeHasNet()
+      console.info(`[NetworkCheck] hasDefaultNet = ${hasNet}`)
+      if (!hasNet) {
+        promptAction.showToast({
+          message: `当前无网络连接，请检查网络设置`,
+          duration: 3000
+        })
+        return
+      }
+    } catch (err) {
+      console.error(`[NetworkCheck] hasDefaultNet error: ${JSON.stringify(err)}`)
+      promptAction.showToast({
+        message: `网络检测异常，请检查网络设置`,
+        duration: 3000
+      })
+      return
+    }
+
+    let permission = await PermissionManager.requestAllPermissions()
+
+    if (!permission) {
+      promptAction.showToast({
+        message: `请先在设置里打开相关相机、相册等权限`,
+        duration: 2000
+      })
+      return
+    }
+
+    router.pushUrl({
+      url: "pages/"+pageName, // 目标url
+      params:param
+    }, router.RouterMode.Standard, (err) => {
+      if (err) {
+        console.error(`Invoke pushUrl failed, code is ${err.code}, message is ${err.message}`);
+        return;
+      }
+      console.info('Invoke pushUrl succeeded.');
+    });
   }
 
   aboutToDisappear(){
@@ -53,25 +143,66 @@ struct Index {
   //viewDidAppear
   onPageShow(): void {
     console.info(`onPageShow`)
+    globalThis.homeParam = undefined
   }
 
   //viewDidDisappear
   onPageHide(): void {
     console.info(`onPageHide`)
-    this.btnEnable = true
+  }
+
+  bannerInit(){
+    const bannerDir = resourceManager.getRawFileListSync(`html`)
+    this.bannerImgUri = new Array()
+    this.bannerHtmlUri = new Array()
+    for (let i = 0; i< bannerDir.length;i++){
+      let dirName = bannerDir[i]
+      let files = resourceManager.getRawFileListSync(`html/`+ dirName)
+      files.forEach(file=>{
+        if (file.startsWith('Banner')) {
+          this.bannerImgUri[i] = `html/${dirName}/${file}`
+        }
+        else if(file.endsWith('html')){
+          this.bannerHtmlUri[i] = `html/${dirName}/${file}`
+        }
+      })
+    }
+  }
+  onBannerClick(index : number){
+    let homeType = 0
+    let homeIndex = 0
+    switch (index)
+    {
+      case 0:
+        homeType = HomeType.Beauty
+        homeIndex  = 3
+        break
+      case 1: homeType = HomeType.Style
+        break
+      case 2: homeType = HomeType.Filter
+        break
+      //2d微整形
+      case 3:
+        homeType = HomeType.Beauty
+        homeIndex  = 2
+        break
+    }
+    globalThis.homeParam = { type: homeType, index: homeIndex}
+    this.routerPage("HtmlPage", Object({html : this.bannerHtmlUri[index]}))
   }
 
 
   build() {
     Column() {
-      //add loading
-      XTHUDLoading()
 
       Swiper(this.controller) {
-        ForEach(['app.media.harmony_filter'], (item: string, index) => {
-          Image($r(item))
+        ForEach(this.bannerImgUri, (item: string, index) => {
+          Image($rawfile(item))
             .width('100%')
             .height('100%')
+            .onClick(()=>{
+              this.onBannerClick(index)
+            })
         })
       }
       .backgroundColor(Color.White)
@@ -80,14 +211,14 @@ struct Index {
 
       GridRow({
         columns: 4,
-        gutter: { x: 5, y: 10 },
+        gutter: { x: 10, y: 10 },
         breakpoints: {
           value: ["400vp", "600vp", "800vp"],
           reference: BreakpointsReference.WindowSize
         },
         direction: GridRowDirection.Row
       }) {
-        ForEach(STDefines.effectStringResource, (item: string) => {
+        ForEach(STDefines.homeGrids, (grid: HomeGrid, index :number) => {
           GridCol({
             span: {
               xs: 1,
@@ -99,39 +230,34 @@ struct Index {
             order: 0
           }) {
             Column() {
-              Image($r(`app.media.${item}`))
+              Image($r(`app.media.${grid.icon}`))
                 .width('80%')
                 .aspectRatio(1)
-              Text($r(`app.string.${item}`))
+              Text(grid.name)
                 .margin({ top: 5 })
+                .fontSize(12)
             }
             .width("100%")
             .justifyContent(FlexAlign.Center)
             .margin(10)
-            .enabled(this.btnEnable)
             .onClick(() => {
-              this.btnEnable = false
               if (!this.result) {
                 promptAction.showToast({
                   message: `check license error ${this.result}`,
                   duration: 2000
                 })
               } else {
-                router.pushUrl({
-                  url: "pages/CameraPreview", // 目标url
-                  params : { mode: item }
-                }, router.RouterMode.Standard, (err) => {
-                  if (err) {
-                    console.error(`Invoke pushUrl failed, code is ${err.code}, message is ${err.message}`);
-                    return;
-                  }
-                  console.info('Invoke pushUrl succeeded.');
-                });
+                if (index < HomeType.All){
+                  globalThis.homeParam = { type: index, index: grid.routerIndex}
+                  this.routerPage("CameraPreview")
+                }else {
+                  this.routerPage("HomeAll")
+                }
               }
             })
           }
         })
-      }.width("100%")
+      }.width("90%")
 
       Blank()
 
@@ -161,25 +287,14 @@ struct Index {
                   Image($r(`app.media.${item}`))
                     .width('80%')
                     .aspectRatio(1)
-                    .enabled(this.btnEnable)
                     .onClick(() => {
-                      this.btnEnable = false
                       if (!this.result) {
                         promptAction.showToast({
                           message: `check license error ${this.result}`,
                           duration: 2000
                         })
                       } else {
-                        router.pushUrl({
-                          url: "pages/CameraPreview", // 目标url
-                          params : {mode : ""}
-                        }, router.RouterMode.Standard, (err) => {
-                          if (err) {
-                            console.error(`Invoke pushUrl failed, code is ${err.code}, message is ${err.message}`);
-                            return;
-                          }
-                          console.info('Invoke pushUrl succeeded.');
-                        });
+                        this.routerPage("CameraPreview", Object({mode : "", index: HomeType.All }))
                       }
                     })
                 } else {
@@ -265,15 +380,38 @@ struct Index {
         duration: 2000
       })
     } else {
-      router.pushUrl({
-        url: type == 0 ? 'pages/Photo' : 'pages/Video',
-        params: {
-          uri: uri
-        }
-      }, router.RouterMode.Standard);
+      this.routerPage( type == 0 ? 'Photo' : 'Video', Object({
+        uri: uri
+      }))
     }
   }
 
+  judgeHasNet(): boolean {
+    try { // Get current network connection
+      let netHandle = connection.getDefaultNetSync();
 
+      // 0-100 Reserved connections for the system
+      if (!netHandle || netHandle.netId < 100) {
+        return false;
+      }
+
+      // Get the properties of the connection
+      let netCapability = connection.getNetCapabilitiesSync(netHandle);
+      let cap = netCapability.networkCap;
+      if (!cap) {
+        return false;
+      }
+
+      for (let em of cap) {
+        if (connection.NetCap.NET_CAPABILITY_VALIDATED === em) {
+          return true;
+        }
+      }
+    } catch (e) {
+      let err = e as BusinessError;
+      console.info('get netInfo error ：' + JSON.stringify(err));
+    }
+    return false;
+  }
 }
 

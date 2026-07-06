@@ -1,9 +1,13 @@
 import FilterResource from '../models/FilterResource'
 import FilterObject from '../models/FilterObject'
 import IndexPath from '../models/IndexPath'
-import libstmobile from 'libentry.so'
-import { BeautyType } from 'libentry.so'
+import libstmobile from '@softsugar/mars_effects'
+import { BeautyType } from '@softsugar/mars_effects'
 import { common } from '@kit.AbilityKit';
+import DBManager from '../models/DBJson/DBManager'
+import { HomeParam, HomeType } from '../common/STDefines'
+import { PanelState } from './PreviewBottomPanel'
+import { EventBus, EventType } from '../utils/EventBus'
 
 const context = getContext(this) as common.UIAbilityContext;
 const filesDir = context.filesDir
@@ -11,14 +15,17 @@ const resourceManager = context.resourceManager
 
 @Component
 export struct FilterPanel {
-  onFilterSelectedCallback?: () => void
-  onFilterStrengthChangedCallback?: () => void
   filterResource: FilterResource = new FilterResource()
-  @State currentCategory: number = 0
   private listController: Scroller = new Scroller()
-  @State selectedIndexPath: IndexPath | null = null
+  @State currentCategory: string = ""
+  @State selectedIndex: IndexPath  = new IndexPath()
   private selectedColor = Color.White
   @State sliderValue: number = 80;
+
+  @Prop panelState: PanelState
+
+  private overLapIndex = new IndexPath()
+  private itemController = new Scroller()
   build() {
     Column() {
       Text(`${Math.floor(this.sliderValue)}`){
@@ -26,10 +33,10 @@ export struct FilterPanel {
       }
       .fontSize(14)
       .fontColor(Color.White)
-      .position({ y:-10, x:`${this.sliderValue*0.6 + 20 - ((this.sliderValue-50)/100) * 4}%`}) //滑块offset
+      .position({ y:-10, x:`${this.sliderValue*0.6 + 20}%`}) //滑块offset
       .backgroundColor('#00000000')
       .markAnchor({x:'50%'})
-      .visibility(this.selectedIndexPath && this.selectedIndexPath.index >= 0 ? Visibility.Visible : Visibility.Hidden)
+      .visibility(this.selectedIndex.index >= 0 ? Visibility.Visible : Visibility.Hidden)
       Slider({
         value: this.sliderValue,
         step: 1,
@@ -37,11 +44,10 @@ export struct FilterPanel {
         max: 100,
         style: SliderStyle.OutSet
       })
-        .visibility(this.selectedIndexPath && this.selectedIndexPath.index >= 0 ? Visibility.Visible : Visibility.Hidden)
-        .width('100%')
+        .visibility(this.selectedIndex.index >= 0 ? Visibility.Visible : Visibility.Hidden)
+        .width('64%')
         .showTips(false)
         .showSteps(true)
-        .padding({ left: '20%', right: '20%' })
         .onChange((value: number, mode: SliderChangeMode) => {
           this.sliderValue = value
           if (this.onFilterStrengthChanged !== undefined) {
@@ -49,69 +55,60 @@ export struct FilterPanel {
           }
         })
       Column(){
-        GridRow({
-          columns: 4,
-          // gutter: { x: 5, y: 10 },
-          breakpoints: {
-            value: ["400vp", "600vp", "800vp"],
-            reference: BreakpointsReference.WindowSize
-          },
-          direction: GridRowDirection.Row
-        }) {
+        List({space: 5,scroller :this.itemController}) {
           ForEach(Array.from(this.filterResource.resource.keys()), (item: string, index) => {
-            GridCol({ span: { xs: 1, sm: 1, md: 1, lg: 1 }, offset: 0, order: 0 }) {
-              Column() {
-                Text($r(`app.string.${item}`))// .margin({ top: 5 })
-                  .fontColor(this.currentCategory == index ? this.selectedColor : Color.Gray)
-                  .width("100%")
-                  .height('100%')
-                  .textAlign(TextAlign.Center)
-                  .fontSize(14)
-              }
-              .width("100%")
-              .height('100%')
-              .justifyContent(FlexAlign.Center)
+            ListItem() {
+              Text($r(`app.string.${item}`))// .margin({ top: 5 })
+                .fontColor(this.currentCategory == item ? this.selectedColor : Color.Gray)
+                .width(70)
+                .height('100%')
+                .textAlign(TextAlign.Center)
+                .fontSize(14)
+                .padding({top:10})
             }
-            .height('100%')
-            .onClick(() => {
-              if (this.currentCategory != index) {
-                this.currentCategory = index
-                let key = Array.from(this.filterResource.resource.keys())[this.currentCategory]
-                this.listController.scrollToIndex(0)
-              }
+            .onClick(()=>{
+              this.onItemSelect(index)
+
             })
           })
         }
-        .width('100%')
+        .alignListItem(ListItemAlign.Center)
+        .listDirection(Axis.Horizontal)
         .height(50)
+        .scrollBar(BarState.Off)
+        .padding({right:0})
+
 
         List({ scroller: this.listController, initialIndex: 0, space: 0 }) {
-          ForEach(this.filterResource.resource.get(Array.from(this.filterResource.resource.keys())[this.currentCategory]), (item: FilterObject, index) => {
+          ForEach(this.filterResource.resource.get(this.currentCategory), (item: FilterObject, index) => {
             ListItem() {
               Column() {
                 Image($rawfile(item.thumbnail))
                   .height(50)
                   .margin({ top: 10, bottom: 5 })
                   .borderColor(this.selectedColor)
-                  .borderWidth(this.selectedIndexPath != null && this.selectedIndexPath.category == this.currentCategory && this.selectedIndexPath.index == index ? 2 : 0)
+                  .borderWidth(this.selectedIndex.category == this.currentCategory&& this.selectedIndex.index == index ? 2 : 0)
                   .borderRadius(10)
 
                 Text(item.name)
                   .fontSize(10)
                   .maxLines(1)
-                  .fontColor(this.selectedIndexPath != null && this.selectedIndexPath.category == this.currentCategory && this.selectedIndexPath.index == index ? this.selectedColor : Color.Gray)
+                  .fontColor(this.selectedIndex.category == this.currentCategory&&this.selectedIndex.index == index ? this.selectedColor : Color.Gray)
               }
               .width(60)
               .onClick(() => {
                 let isInvert = false
-                if (this.selectedIndexPath?.category == this.currentCategory && this.selectedIndexPath?.index == index) {
-                  this.selectedIndexPath.index = -1
+                if (this.selectedIndex.category == this.currentCategory&& this.selectedIndex.index == index) {
+                  this.selectedIndex.index = -1
                   isInvert = true
                 } else {
-                  let selectedIndexPath = new IndexPath()
-                  selectedIndexPath.category = this.currentCategory
-                  selectedIndexPath.index = index
-                  this.selectedIndexPath = selectedIndexPath
+
+                  this.selectedIndex.category = this.currentCategory
+                  this.selectedIndex.index = index
+
+                  if (this.overLapIndex.categoryIndex >= 0) {
+                    this.overLapIndex = new IndexPath()
+                  }
                   /* this.currentLength = 80;*/
                 }
                 if (this.onFilterSelected !== undefined) {
@@ -158,34 +155,105 @@ export struct FilterPanel {
     .width('100%')
     .height('100%')
   }
+
+  aboutToAppear(): void {
+    EventBus.listenEvent(EventType.OnModelLoaded,()=>{
+      if (globalThis.homeParam && globalThis.homeParam.type == HomeType.Filter){
+        this.itemController.scrollTo(globalThis.homeParam.index)
+        this.onItemSelect(globalThis.homeParam.index)
+      }
+      else {
+        let item = DBManager.Instance().getFilter()
+        if (this.panelState == PanelState.Preview) {
+          const model = this.filterResource.resource.get(item.groupEnumName)?.[item.selectedPosition]
+          if (model) {
+            this.currentCategory = item.groupEnumName
+            this.selectedIndex.category = item.groupEnumName
+            this.selectedIndex.index = item.selectedPosition
+
+            this.sliderValue = item.filterStrength *100
+            this.onFilterStrengthChanged(item.filterStrength *100)
+
+            this.onFilterSelected(model, false)
+
+          }else {
+            this.currentCategory = this.filterResource.resource.keys().next().value
+          }
+        }else{
+          this.currentCategory = this.filterResource.resource.keys().next().value
+        }
+      }
+    })
+
+    EventBus.listenEvent(EventType.SetOverLapFilter,()=>{
+      this.overLapIndex.category = this.selectedIndex.category
+      this.overLapIndex.categoryIndex = this.selectedIndex.categoryIndex
+      this.overLapIndex.index = this.selectedIndex.index
+
+      this.selectedIndex.category = ''
+      this.selectedIndex.categoryIndex = -1
+      this.selectedIndex.index = -1
+    })
+    EventBus.listenEvent(EventType.ReSetOverLapFilter,()=>{
+      this.selectedIndex.category = this.overLapIndex.category
+      this.selectedIndex.categoryIndex = this.overLapIndex.categoryIndex
+      this.selectedIndex.index = this.overLapIndex.index
+      this.overLapIndex=new IndexPath()
+    })
+  }
   aboutToDisappear(): void {
-      this.onFilterSelectedCallback = undefined;
-      this.onFilterStrengthChangedCallback = undefined;
+    EventBus.unListenEvent(EventType.OnModelLoaded)
+    EventBus.unListenEvent(EventType.SetOverLapFilter)
+    EventBus.unListenEvent(EventType.ReSetOverLapFilter)
+  }
+
+  onItemSelect(index : number){
+    let item = Array.from(this.filterResource.resource.keys())[index]
+    if (this.currentCategory != item) {
+      this.currentCategory = item
+      this.listController.scrollToIndex(0)
+    }
   }
 
   onFilterSelected(filter: FilterObject, isInvert: boolean){
     if (isInvert) {
       libstmobile.setBeautyStrength(BeautyType.EFFECT_BEAUTY_FILTER, 0)
+      if (this.panelState == PanelState.Preview) {
+        DBManager.Instance().deleteAllFilter()
+      }
     } else {
       let fileContent = resourceManager.getRawFileContentSync(filter.path)
       const buffer = fileContent.buffer.slice(0);
       libstmobile.setBeautyPackageByBuffer(BeautyType.EFFECT_BEAUTY_FILTER, buffer)
       libstmobile.setBeautyStrength(BeautyType.EFFECT_BEAUTY_FILTER, this.sliderValue / 100.0)
-      this.onFilterSelectedCallback?.()
+
+      if (this.panelState == PanelState.Preview) {
+        DBManager.Instance().updateFilter(this.selectedIndex.category, this.selectedIndex.index, filter.path)
+        DBManager.Instance().updateFilterStrength(this.sliderValue / 100.0)
+      }
     }
+    EventBus.emitProcess()
   }
 
   onFilterStrengthChanged(strength: number){
     libstmobile.setBeautyStrength(BeautyType.EFFECT_BEAUTY_FILTER, strength / 100.0)
-    this.onFilterStrengthChangedCallback?.()
+
+    if (this.panelState == PanelState.Preview) {
+      DBManager.Instance().updateFilterStrength(strength / 100.0)
+    }
+    EventBus.emitProcess()
   }
 
   onReset(){
-    if (this.selectedIndexPath) {
-      this.selectedIndexPath.index = -1
+    if (this.selectedIndex) {
+      this.selectedIndex.index = -1
     }
     libstmobile.setBeautyStrength(BeautyType.EFFECT_BEAUTY_FILTER, 0)
     this.sliderValue = 80
-    this.onFilterStrengthChangedCallback?.()
+    if (this.panelState == PanelState.Preview) {
+      DBManager.Instance().deleteAllFilter()
+    }
+
+    EventBus.emitProcess()
   }
 }

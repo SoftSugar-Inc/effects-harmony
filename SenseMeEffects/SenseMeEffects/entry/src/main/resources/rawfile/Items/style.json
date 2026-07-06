@@ -1,0 +1,25 @@
+[
+  {
+    "effectsListId": 139,
+    "listName": "一键美颜",
+    "type" : 1,
+    "localPackages":["style_one_click_beauty/经典.zip"]
+  },
+  {
+    "effectsListId": 26,
+    "listName": "自然",
+    "type" : 1
+  },
+  {
+    "effectsListId": 27,
+    "listName": "轻妆",
+    "type" : 1,
+    "localPackages":["style_lightly/万能.zip","style_lightly/气色.zip"]
+  }
+,
+  {
+    "effectsListId": 28,
+    "listName": "流行",
+    "type" : 1
+  }
+]

@@ -5,6 +5,16 @@
     "type" : 401
   },
   {
+    "listName": "卧蚕",
+    "effectsListId": 140,
+    "type" : 413
+  },
+  {
+    "listName": "双眼皮",
+    "effectsListId": 141,
+    "type" : 412
+  },
+  {
     "listName": "口红",
     "effectsListId": 24,
     "type" : 402
@@ -35,9 +45,9 @@
     "type" : 407
   },
   {
-    "listName": "睫毛",
+    "listName": "眼睫毛",
     "effectsListId": 18,
-    "type" : 407
+    "type" : 408
   },
   {
     "listName": "美瞳",

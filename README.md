@@ -4,6 +4,14 @@
 
 ---
 
+SDK名称：SenseAR Effects 特效引擎 SDK - Harmony  
+包名：@softsugar/mars_effects  
+版本号：v9.8.0  
+更新日期：2026-07-06  
+MD5值：13506993a88b8b12e91fc15d486c6431
+
+---
+
 ## 功能亮点
 
 - 人脸检测与跟踪
@@ -56,12 +64,11 @@
        "path": "./src/main/cpp/CMakeLists.txt",
        "arguments": "",
        "cppFlags": ""
-      }
+       }
    }
    ```
 
 4. 添加so库依赖
-
    在0h-package.json5中添加以下字段
    
    ```json
@@ -70,7 +77,7 @@
    },
    ```
 
-6. 添加Xcomponent组件
+5. 添加Xcomponent组件
    
    sdk内部会将画面渲染到Xcomponent组件上，ArkTS只需构建布局，参考如下:
    
@@ -100,4 +107,4 @@
 ## 反馈
 
 - 如果您在使用过程中有遇到什么问题，欢迎提交 [**issue**](https://github.com/SoftSugar-Inc/effects-harmony/issues)。
-- 我们真诚地感谢您的贡献，欢迎通过 GitHub 的 fork 和 pull request 流程来提交代码。代码风格请参考[**Introduction to ArkTS**](https://developer.huawei.com/consumer/cn/doc/harmonyos-guides/introduction-to-arkts)
+- 我们真诚地感谢您的贡献，欢迎通过 GitHub 的 fork 和 pull request 流程来提交代码。代码风格请参考[**Introduction to ArkTS**]([文档中心](https://developer.huawei.com/consumer/cn/doc/harmonyos-guides/introduction-to-arkts))

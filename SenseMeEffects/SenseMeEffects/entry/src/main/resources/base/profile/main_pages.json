@@ -3,6 +3,9 @@
     "pages/Index",
     "pages/Photo",
     "pages/Video",
-    "pages/CameraPreview"
+    "pages/CameraPreview",
+    "pages/HomeAll",
+    "pages/ScanFacePage",
+    "pages/HtmlPage"
   ]
 }

@@ -1,0 +1,9 @@
+{
+  "module": {
+    "name": "mars_effects",
+    "type": "har",
+    "deviceTypes": [
+      "default"
+    ]
+  }
+}

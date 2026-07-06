@@ -1,0 +1,28 @@
+[
+  {
+    "des": "背景虚化1",
+    "uid": "effect_beauty_tone_bokeh_1",
+    "display_des_res_id": "basic_bokeh1",
+    "beauty_type": 605,
+    "select_icon_nor_res": "beauty_bokeh_unselected",
+    "select_icon_press_res": "beauty_bokeh_selected",
+    "def_strength": 0,
+    "mutex_other_uid_arr": ["effect_beauty_tone_bokeh_2"],
+    "beauty_mode_param": 605,
+    "beauty_mode_value": 0,
+    "same_beauty_type_multi_mode": true
+  },
+  {
+    "des": "背景虚化2",
+    "mutex_other_uid_arr": ["effect_beauty_tone_bokeh_1"],
+    "uid": "effect_beauty_tone_bokeh_2",
+    "display_des_res_id": "basic_bokeh2",
+    "beauty_type": 605,
+    "select_icon_nor_res": "beauty_bokeh_unselected",
+    "select_icon_press_res": "beauty_bokeh_selected",
+    "def_strength": 0,
+    "beauty_mode_param": 605,
+    "beauty_mode_value": 1,
+    "same_beauty_type_multi_mode": true
+  }
+]

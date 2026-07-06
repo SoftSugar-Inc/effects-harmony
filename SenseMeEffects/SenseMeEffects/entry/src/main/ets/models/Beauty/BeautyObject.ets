@@ -1,37 +1,36 @@
-import { BeautyType } from 'libentry.so'
-import BeautyCleanObject from './BeautyCleanObject'
+import { BeautyType } from '@softsugar/mars_effects'
+import { st_face_shape_t } from '@softsugar/mars_effects'
+import BeautyCleanObject, { BeautyCleanParam } from './BeautyCleanObject'
 
 @Observed
 export default class BeautyObject {
   cleanObject: BeautyCleanObject
-  currentStrength: number | undefined
+  currentStrength: number = 0
   subBeauties: BeautyObject[] | undefined
+  subParams : BeautyParam[] | undefined
 
-
-  constructor(name: string, defaultIcon: string, highlightIcon: string, type: BeautyType = BeautyType.EFFECT_BEAUTY_UNKNOWN,need_open_whiten_skin_mask:boolean) {
-    this.cleanObject = new BeautyCleanObject(name, defaultIcon, highlightIcon, type, need_open_whiten_skin_mask)
-    this.currentStrength = this.cleanObject.defaultStrength
+  constructor(jsonObj:BeautyCleanObject) {
+    this.cleanObject = jsonObj
   }
 
-  static fromJson(json: BeautyObject): BeautyObject {
-    let result = new BeautyObject(json.cleanObject.name, json.cleanObject.defaultIcon, json.cleanObject.highlightIcon,
-      json.cleanObject.type, json.cleanObject.need_open_whiten_skin_mask)
-    result.cleanObject.defaultStrength = json.cleanObject.defaultStrength
-    result.cleanObject.maxStrength = json.cleanObject.maxStrength
-    result.cleanObject.minStrength = json.cleanObject.minStrength
-    result.cleanObject.mode = json.cleanObject.mode
-    result.cleanObject.path = json.cleanObject.path
 
-    result.currentStrength = json.cleanObject.defaultStrength
-    if (json.subBeauties) {
-      let subBeauties: BeautyObject[] = []
-      for (let index = 0; index < json.subBeauties.length; index++) {
-        const element = json.subBeauties[index];
-        let item = BeautyObject.fromJson(element)
-        subBeauties.push(item)
-      }
-      result.subBeauties = subBeauties
+  getDefaultStrength(faceShape:st_face_shape_t|undefined):number{
+    if (!this.cleanObject.defaultStrengths || this.cleanObject.defaultStrengths.length <= 0||!faceShape) return this.cleanObject.def_strength??0
+    let index = (faceShape as number) - 1
+    if (index < this.cleanObject.defaultStrengths.length) {
+      return this.cleanObject.defaultStrengths[index]
+    }else {
+      return this.cleanObject.defaultStrengths[0]
     }
-    return result
+  }
+
+}
+
+@Observed
+export class BeautyParam{
+  currentStrength: number = 0
+  cleanObject:BeautyCleanParam
+  constructor(jsonObj:BeautyCleanParam) {
+    this.cleanObject = jsonObj
   }
 }
