@@ -1,13 +1,13 @@
 # SenseAR Effects特效引擎Harmony SDK集成Demo
 
-SDK名称：SenseAR Effects 特效引擎 SDK - Harmony  
-SDK功能介绍：本项目是商汤科技提供的[特效引擎 SDK](https://sensear.softsugar.com/) Harmony 集成演示工程，旨在帮助开发者快速了解如何在 Harmony 项目中集成与使用我们的特效引擎 SDK。您可以通过运行本 Demo，直观体验 SDK 提供的各类人脸特效、贴纸、美颜、滤镜等功能。  
-SDK包名：@softsugar/mars_effects  
-版本号：v9.9.0  
-隐私政策：[SenseAR Effects SDK隐私政策](https://effectsstudio-manual.softsugar.com/questions6-1/)  
-合规使用说明：开发者应在遵守适用法律法规、隐私政策及商汤科技相关授权协议的前提下集成和使用本 SDK，并在业务场景中依法履行用户告知、授权同意、个人信息保护等合规义务。  
-har包的MD5值：13506993a88b8b12e91fc15d486c6431  
-开发者：商汤科技
+- SDK名称：SenseAR Effects 特效引擎 SDK - Harmony  
+- SDK功能介绍：本项目是商汤科技提供的[特效引擎 SDK](https://sensear.softsugar.com/) Harmony 集成演示工程，旨在帮助开发者快速了解如何在 Harmony 项目中集成与使用我们的特效引擎 SDK。您可以通过运行本 Demo，直观体验 SDK 提供的各类人脸特效、贴纸、美颜、滤镜等功能。  
+- SDK包名：@softsugar/mars_effects  
+- 版本号：v9.9.0  
+- 隐私政策：[SenseAR Effects SDK隐私政策](https://effectsstudio-manual.softsugar.com/questions6-1/)  
+- 合规使用说明：开发者应在遵守适用法律法规、隐私政策及商汤科技相关授权协议的前提下集成和使用本 SDK，并在业务场景中依法履行用户告知、授权同意、个人信息保护等合规义务。  
+- har包的MD5值：13506993a88b8b12e91fc15d486c6431  
+- 开发者：商汤科技
 
 ---
 
