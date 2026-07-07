@@ -44,7 +44,7 @@ infer-out/
 ipa.sh
 
 
-# Harmony
+# Harmony project files
 /node_modules
 /local.properties
 /.idea
