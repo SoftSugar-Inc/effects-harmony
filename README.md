@@ -5,9 +5,9 @@
 - SDK包名：@softsugar/mars_effects  
 - 版本号：v9.8.0  
 - 隐私政策：[SenseAR Effects SDK隐私政策](https://effectsstudio-manual.softsugar.com/questions6-1/)  
-- 合规使用说明：开发者应在遵守适用法律法规、隐私政策及商汤科技相关授权协议的前提下集成和使用本 SDK，并在业务场景中依法履行用户告知、授权同意、个人信息保护等合规义务。  
+- 合规使用说明：[SenseAR Effects SDK 合规使用指南](/Compliance_Guidelines.md  )  
 - har包的MD5值：ae3f4d0e8d55d9d7fd113ce97edc4eae  
-- 开发者：商汤科技
+- 开发者：北京大甜绵白糖科技有限公司
 
 ---
 
