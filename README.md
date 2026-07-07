@@ -3,7 +3,7 @@
 - SDK名称：SenseAR Effects
 - SDK功能介绍：本项目是北京大甜绵白糖科技有限公司提供的[SenseAR Effects](https://sensear.softsugar.com/) Harmony 集成演示工程，旨在帮助开发者快速了解如何在 Harmony 项目中集成与使用我们的SenseAR Effects。您可以通过运行本 Demo，直观体验 SDK 提供的各类人脸特效、贴纸、美颜、滤镜等功能。  
 - SDK包名：@softsugar/mars_effects  
-- 版本号：v9.8.0  
+- 版本号：9.8.0  
 - 隐私政策：[SenseAR Effects SDK隐私政策](https://effectsstudio-manual.softsugar.com/questions6-1/)  
 - 合规使用说明：[SenseAR Effects SDK 合规使用指南](/Compliance_Guidelines.md  )  
 - har包的MD5值：ae3f4d0e8d55d9d7fd113ce97edc4eae  
